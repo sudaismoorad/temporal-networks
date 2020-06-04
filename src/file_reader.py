@@ -1,5 +1,6 @@
 from stn import STN
 from stnu import STNU
+from algorithms import *
 
 
 class FileReader:
@@ -74,6 +75,7 @@ class FileReader:
                     state = "NAMES"
                 elif "edges" in line.lower():
                     state = "EDGES"
+                    edge_counter = 0
                 elif "links" in line.lower():
                     state = "LINKS"
                 else:
@@ -99,17 +101,18 @@ class FileReader:
                         self.network.names_dict[node_name] = idx
                 elif state == 'EDGES':
                     weights = line.split()
+                    edge_counter += 1
                     # make a list of list of tuples
                     idx_key = self.network.names_dict[weights[0]]
                     idx_value = self.network.names_dict[weights[2]]
-                    tup = (idx_value, weights[1])
+                    tup = (idx_value, int(weights[1]))
                     self.network.successor_edges[idx_key].append(tup)
                 elif state == 'LINKS':
                     raise Exception(
                         "Simple Temporal Networks do not have contingent links.")
                 else:
                     pass
-        if num_edges != len(self.network.successor_edges):
+        if num_edges != edge_counter:
             raise Exception(
                 "Number of edges does not match the number given above")
 
@@ -160,3 +163,30 @@ class FileReader:
                     pass
                 else:
                     pass
+
+
+
+f = FileReader("/Users/muhammadfurrukhasif/Downloads/dc-2.stnu")
+
+f.read_file()
+
+floyd_warshall(f.network)
+
+print(f.network.distance_matrix)
+
+for i in range(1,6):
+    bellman_ford(f.network, i)
+    print(f.network.distances)
+
+
+bellman_ford(f.network)
+
+print(f.network.distances)
+
+for i in range(1,5):
+    dijkstra(f.network, i)
+    print(f.network.distances)
+
+johnson(f.network)
+
+print(f.network.distance_matrix)

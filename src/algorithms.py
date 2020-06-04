@@ -28,7 +28,6 @@ def floyd_warshall(network):
             return False
 
     network.distance_matrix = distance_matrix
-
     # should we return the distance matrix also?
     return distance_matrix
 
@@ -68,7 +67,8 @@ def _bellman_ford_new(network):
     distances = [float("inf") for _ in range(length)]
     successor_edges = deepcopy(network.successor_edges)
 
-    successor_edges.append([0 for i in range(length)])
+    distances.append(0)
+    successor_edges.append([(i, 0) for i in range(length)])
 
     for _ in range(length):
         for node_idx in range(length + 1):
@@ -82,7 +82,7 @@ def _bellman_ford_new(network):
                 # raise Exception("are we supposed to throw an error here?")
                 return False
 
-    network.distances = distances
+    network.distances = distances[:-1]
     # should we return the distances also?
     return True
 
@@ -118,14 +118,14 @@ def dijkstra(network, src):
         for successor_idx, weight in network.successor_edges[u_idx]:
             if (distances[u_idx] + weight < distances[successor_idx]):
                 distances[successor_idx] = distances[u_idx] + weight
-                heapq.heappush(min_heap, distances[successor_idx])
+                heapq.heappush(min_heap, (distances[successor_idx], successor_idx))
 
     network.distances = distances
 
     return distances
 
 
-def johnson(network, src):
+def johnson(network):
     """
     Calculates the shortest path using Johnson's algorithm
     Parameters
@@ -140,13 +140,14 @@ def johnson(network, src):
     distance_matrix = [[] for x in range(network.length)]
 
     bellman_ford(network)
-    for node_idx, list_of_edges in enumerate(network.successor_edges):
-        for successor_idx, weight in list_of_edges:
-            network.successor_edges[node_idx][1] = (weight
-                                                    + network.distances[node_idx]
-                                                    - network.distances[successor_idx])
+    successor_edges = deepcopy(network.successor_edges)
+    for node_idx, list_of_edges in enumerate(successor_edges):
+        print(list_of_edges)
+        for tuple_idx, (successor_idx, weight) in enumerate(list_of_edges):
+            successor_edges[node_idx][tuple_idx] = (successor_idx, weight + network.distances[node_idx] - network.distances[successor_idx])
 
     for node_idx in range(network.length):
         distance_matrix[node_idx] = dijkstra(network, node_idx)
 
+    network.distance_matrix = distance_matrix
     return distance_matrix
