@@ -57,4 +57,12 @@ class STN:
         self.distances = []
 
     def __str__(self):
-        pass
+        stringy = ""
+        stringy += f"Number of nodes in network: {self.length}\n"
+        stringy += f"Dictionary of names -> index: {self.names_dict}\n"
+        stringy += f"Successor edges of each node: {self.successor_edges}\n"
+        if self.distance_matrix:
+            stringy += f"Distance matrix: {self.distance_matrix}\n"
+        if self.distances:
+            stringy += f"Distances: {self.distances}\n"
+        return stringy

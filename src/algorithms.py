@@ -118,7 +118,8 @@ def dijkstra(network, src):
         for successor_idx, weight in network.successor_edges[u_idx]:
             if (distances[u_idx] + weight < distances[successor_idx]):
                 distances[successor_idx] = distances[u_idx] + weight
-                heapq.heappush(min_heap, (distances[successor_idx], successor_idx))
+                heapq.heappush(
+                    min_heap, (distances[successor_idx], successor_idx))
 
     network.distances = distances
 
@@ -142,9 +143,9 @@ def johnson(network):
     bellman_ford(network)
     successor_edges = deepcopy(network.successor_edges)
     for node_idx, list_of_edges in enumerate(successor_edges):
-        print(list_of_edges)
         for tuple_idx, (successor_idx, weight) in enumerate(list_of_edges):
-            successor_edges[node_idx][tuple_idx] = (successor_idx, weight + network.distances[node_idx] - network.distances[successor_idx])
+            successor_edges[node_idx][tuple_idx] = (
+                successor_idx, weight + network.distances[node_idx] - network.distances[successor_idx])
 
     for node_idx in range(network.length):
         distance_matrix[node_idx] = dijkstra(network, node_idx)

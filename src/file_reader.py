@@ -165,28 +165,33 @@ class FileReader:
                     pass
 
 
-
-f = FileReader("/Users/muhammadfurrukhasif/Downloads/dc-2.stnu")
+f = FileReader("../sample_stns/dc-2.stn")
 
 f.read_file()
-
+print("########### TESTING FLOYD WARSHALL ###########")
 floyd_warshall(f.network)
 
-print(f.network.distance_matrix)
+print(f.network)
 
-for i in range(1,6):
+print("########### TESTING BELLMAN FORD ###########")
+for i in range(1, 6):
     bellman_ford(f.network, i)
-    print(f.network.distances)
+    print(f.network)
 
+print("########### TESTING BELLMAN FORD ###########")
 
 bellman_ford(f.network)
 
-print(f.network.distances)
+print(f.network)
 
-for i in range(1,5):
+print("########### TESTING DIJKSTRA ###########")
+
+for i in range(1, 5):
     dijkstra(f.network, i)
-    print(f.network.distances)
+    print(f.network)
+
+print("########### TESTING JOHNSON ###########")
 
 johnson(f.network)
 
-print(f.network.distance_matrix)
+print(f.network)
