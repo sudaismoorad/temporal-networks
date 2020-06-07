@@ -83,14 +83,12 @@ class Dijkstra:
     # successor, predecessor both?!?!?!?!?!?!
     @staticmethod
     def _johnson_dijkstra(network, src_idx, distances, potential_function):
-
         reweighted_edges = deepcopy(network.successor_edges)
 
         for node_idx, dict_of_edges in enumerate(reweighted_edges):
             # do we not need tuple_idx
             for tuple_idx, (successor_idx, weight) in enumerate(dict_of_edges.items()):
-                reweighted_edges[node_idx][successor_idx] = (
-                    successor_idx, weight + potential_function[node_idx] - potential_function[successor_idx])
+                reweighted_edges[node_idx][successor_idx] = weight + potential_function[node_idx] - potential_function[successor_idx]
 
         min_heap = []
         in_queue = {}
@@ -98,11 +96,8 @@ class Dijkstra:
         heapq.heappush(min_heap, (distances[src_idx], src_idx))
         in_queue[src_idx] = True
 
-        # ok there is smth wrong here
-        print(reweighted_edges)
         while min_heap:
             _, u_idx = heapq.heappop(min_heap)
-            in_queue.pop(u_idx)
             for successor_idx, weight in reweighted_edges[u_idx].items():
 
                 new_weight = weight + \
@@ -114,7 +109,9 @@ class Dijkstra:
                     in_queue[successor_idx] = True
                 else:
                     if (new_weight < distances[successor_idx]):
+
                         distances[successor_idx] = new_weight
+
                         heapq.heappush(
                             min_heap, (distances[successor_idx], successor_idx))
                         in_queue[successor_idx] = True
