@@ -19,7 +19,7 @@ class FileReader:
     read_file
     """
 
-    def __init__(self, file_path):
+    def __init__(self):
         """
         Constructor for the file reader
         Parameters
@@ -32,10 +32,8 @@ class FileReader:
         -------
         None
         """
-        self.file_path = file_path
-        self.network = []
 
-    def read_file(self):
+    def read_file(self, file_path):
         """
         Reads the file and decides whether to create an STN or an STNU
         Parameters
@@ -45,7 +43,7 @@ class FileReader:
         -------
         None
         """
-        file = open(self.file_path, "r")
+        file = open(file_path, "r")
         state = ""
         for line in file:
             if "network" in line.lower():
@@ -53,15 +51,14 @@ class FileReader:
                 continue
             if state == "NETWORK_TYPE":
                 if "u" not in line.lower():
-                    self.network = STN()
                     return self._read_stn(file)
                 elif "u" in line.lower():
-                    self.network = STNU()
                     return self._read_stnu(file)
                 else:
                     raise Exception("Invalid Network Type")
 
     def _read_stn(self, file):
+        network = STN()
         state = ""
         for line in file:
             if line.startswith('#'):
@@ -83,9 +80,10 @@ class FileReader:
             else:
                 if state == 'NO_POINTS':
                     num_points = int(line)
-                    self.network.length = num_points
-                    self.network.successor_edges = [
-                        [] for i in range(num_points)]
+                    network.length = num_points
+                    network.successor_edges = [
+                        {} for i in range(num_points)]
+                    network.names_list = ["0" for i in range(num_points)]
                 elif state == 'NO_EDGES':
                     num_edges = int(line)
                 elif state == 'NO_LINKS':
@@ -98,15 +96,16 @@ class FileReader:
                         raise Exception(
                             "Number of names does not match the number of nodes provided")
                     for idx, node_name in enumerate(list_of_nodes):
-                        self.network.names_dict[node_name] = idx
+                        network.names_dict[node_name] = idx
+                        network.names_list[idx] = node_name
                 elif state == 'EDGES':
                     weights = line.split()
                     edge_counter += 1
                     # make a list of list of tuples
-                    idx_key = self.network.names_dict[weights[0]]
-                    idx_value = self.network.names_dict[weights[2]]
-                    tup = (idx_value, int(weights[1]))
-                    self.network.successor_edges[idx_key].append(tup)
+                    idx_node = network.names_dict[weights[0]]
+                    idx_successor = network.names_dict[weights[2]]
+                    network.successor_edges[idx_node][idx_successor] = int(
+                        weights[1])
                 elif state == 'LINKS':
                     raise Exception(
                         "Simple Temporal Networks do not have contingent links.")
@@ -115,8 +114,10 @@ class FileReader:
         if num_edges != edge_counter:
             raise Exception(
                 "Number of edges does not match the number given above")
+        return network
 
     def _read_stnu(self, file):
+        network = STN()
         state = ""
         for line in file:
             if line.startswith('#'):
@@ -137,9 +138,10 @@ class FileReader:
             else:
                 if state == 'NO_POINTS':
                     num_points = int(line)
-                    self.network.length = num_points
-                    self.network.successor_edges = [
-                        [] for i in range(num_points)]
+                    network.length = num_points
+                    network.successor_edges = [
+                        {} for i in range(num_points)]
+                    network.names_list = ["0" for i in range(num_points)]
                 elif state == 'NO_EDGES':
                     num_edges = int(line)
                 elif state == 'NO_LINKS':
@@ -150,14 +152,15 @@ class FileReader:
                         raise Exception(
                             "Number of names does not match the number of nodes provided")
                     for idx, node_name in enumerate(list_of_nodes):
-                        self.network.names_dict[node_name] = idx
+                        network.names_dict[node_name] = idx
+                        network.names_list[idx] = node_name
                 elif state == 'EDGES':
                     weights = line.split()
                     # make a list of list of tuples
-                    idx_key = self.network.names_dict[weights[0]]
-                    idx_value = self.network.names_dict[weights[2]]
-                    tup = (idx_value, weights[1])
-                    self.network.successor_edges[idx_key].append(tup)
+                    idx_node = network.names_dict[weights[0]]
+                    idx_successor = network.names_dict[weights[2]]
+                    network.successor_edges[idx_node][idx_successor] = int(
+                        weights[1])
                 elif state == 'LINKS':
                     # deal with contingent links later
                     pass
@@ -165,33 +168,33 @@ class FileReader:
                     pass
 
 
-f = FileReader("../sample_stns/dc-2.stn")
+f = FileReader()
 
-f.read_file()
+stn = f.read_file("../sample_stns/dc-2.stn")
 print("########### TESTING FLOYD WARSHALL ###########")
-floyd_warshall(f.network)
+floyd_warshall(stn)
 
-print(f.network)
+print(stn)
 
 print("########### TESTING BELLMAN FORD ###########")
 for i in range(1, 6):
-    bellman_ford(f.network, i)
-    print(f.network)
+    bellman_ford(stn, i)
+    print(stn)
 
 print("########### TESTING BELLMAN FORD ###########")
 
-bellman_ford(f.network)
+bellman_ford(stn)
 
-print(f.network)
+print(stn)
 
 print("########### TESTING DIJKSTRA ###########")
 
 for i in range(1, 5):
-    dijkstra(f.network, i)
-    print(f.network)
+    dijkstra(stn, i)
+    print(stn)
 
 print("########### TESTING JOHNSON ###########")
 
-johnson(f.network)
+johnson(stn)
 
-print(f.network)
+print(stn)

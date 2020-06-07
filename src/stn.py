@@ -1,7 +1,5 @@
 import heapq
 
-# make __str__
-
 
 class STN:
     """
@@ -18,18 +16,6 @@ class STN:
         and the second element is the weight/distance between the i-th and j-th nodes
     length : int
         number of nodes in the STN
-    Methods
-    -------
-    floyd_warshall()
-        describe
-    bellmann_ford()
-        describe
-    dijkstra(src)
-        Calculates the shortest path array from src using
-        Dijkstra's algorithm
-    johnson(src)
-        Calculates the shortest path matrix between every node
-        using Johnson's algorithm
     """
 
     def __init__(self):
@@ -51,18 +37,16 @@ class STN:
         None
         """
         self.names_dict = {}
+        self.names_list = []
         self.successor_edges = []
         self.length = 0
         self.distance_matrix = []
-        self.distances = []
 
     def __str__(self):
-        stringy = ""
+        stringy = "STN:\n"
         stringy += f"Number of nodes in network: {self.length}\n"
         stringy += f"Dictionary of names -> index: {self.names_dict}\n"
         stringy += f"Successor edges of each node: {self.successor_edges}\n"
         if self.distance_matrix:
             stringy += f"Distance matrix: {self.distance_matrix}\n"
-        if self.distances:
-            stringy += f"Distances: {self.distances}\n"
         return stringy
