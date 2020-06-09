@@ -21,9 +21,15 @@ class Johnson:
 
         potential_function = BellmanFord.bellman_ford(network)
 
+        if not potential_function:
+            return False
+
         for node_idx in range(network.length):
             distance_matrix[node_idx] = Dijkstra.dijkstra(
                 network, node_idx, potential_function=potential_function)
 
-        network.distance_matrix = distance_matrix
+        if network.flag:
+            network.flag = False
+
+        # network.distance_matrix = distance_matrix
         return distance_matrix

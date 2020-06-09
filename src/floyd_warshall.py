@@ -41,6 +41,9 @@ class FloydWarshall:
                 # raise Exception("Negative cycle found")
                 return False
 
+        if network.flag:
+            network.flag = False
+
         network.distance_matrix = distance_matrix
         # should we return the distance matrix also?
         return distance_matrix

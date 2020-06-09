@@ -198,3 +198,5 @@ print("########### TESTING JOHNSON ###########")
 johnson(stn)
 
 print(stn)
+
+dispatch(stn)
