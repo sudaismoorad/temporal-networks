@@ -3,9 +3,41 @@ from copy import deepcopy
 
 
 class Dijkstra:
+    """
+    A class to represent all variants of Dijkstra's algorithm.
+    ...
+    Methods
+    -------
+    dijkstra
+    _dijkstra
+    _pred_dijkstra
+    _johnson_dijkstra
+    """
 
     @staticmethod
     def dijkstra(network, src, succ_direction=True, potential_function=False):
+        """
+        A static method that calls one of the variants of Dikstra's algorithm
+        depending on the inputs given.
+        Parameters
+        ----------
+        network: STN, STNU
+            The simple temporal network the algorithm will be run on.
+        src: int, str
+            An integer or string representing the index / name of a node. If
+            not given the default is -1.
+        succ_direction: bool
+            If true succesor edge variant runs, if false predecessor edge
+            variant runs. Default value is true.
+        potential_function: int[]
+            An array representing the shortest distances from the src to all
+            nodes.
+        Returns
+        -------
+        distances: int[]
+            A list representing the shortest distances between the src and all
+            the nodes.
+        """
 
         if type(src) == str:
             src_idx = network.names_dict[src]
@@ -26,19 +58,26 @@ class Dijkstra:
     @staticmethod
     def _dijkstra(network, src_idx, distances):
         """
-        Calculates the shortest path using Dijkstra's algorithm
+        A static method that calls a variant of Dikstra's algorithm which
+        calculates the shortest distances from the given src to all nodes by
+        propagating successor edges.
         Parameters
         ----------
-        src : str, int
-            The node dijkstra's algorithm uses to find the shortest path from.
-            You could provide the index of the node or the name of the node and
-            the algorithm should recognize which one you have entered
+        network: STN, STNU
+            The simple temporal network the algorithm will be run on.
+        src_idx: int, str
+            An integer representing the index of a node.
+        distances: int[]
+            A list representing the shortest distances between the src and all
+            the nodes. Intialised to infinity besides the src to src intialised
+            to 0.
         Returns
         -------
-        distances : List[int]
-            A list representing the shortest distances to each node from the
-            src node
+        distances: int[]
+            A list representing the shortest distances between the src and all
+            the nodes.
         """
+
         min_heap = []
         heapq.heappush(min_heap, (distances[src_idx], src_idx))
 
@@ -54,7 +93,26 @@ class Dijkstra:
 
     @staticmethod
     def _pred_dijkstra(network, src_idx, distances):
-
+        """
+        A static method that calls a variant of Dikstra's algorithm which
+        calculates the shortest distances from the given src to all nodes by
+        propagating predecessor edges.
+        Parameters
+        ----------
+        network: STN, STNU
+            The simple temporal network the algorithm will be run on.
+        src_idx: int, str
+            An integer representing the index of a node.
+        distances: int[]
+            A list representing the shortest distances between the src and all
+            the nodes. Intialised to infinity besides the src to src intialised
+            to 0.
+        Returns
+        -------
+        distances: int[]
+            A list representing the shortest distances between the src and all
+            the nodes.
+        """
         predecessor_edges = [{} for i in range(network.length)]
         previous_visited = [False for i in range(network.length)]
 
@@ -83,6 +141,30 @@ class Dijkstra:
     # successor, predecessor both?!?!?!?!?!?!
     @staticmethod
     def _johnson_dijkstra(network, src_idx, distances, potential_function):
+        """
+        A static method that calls a variant of Dikstra's algorithm used in
+        Johnson's algorithm. It calculates the shortest distances from the
+        given src to all nodes using a potential function.
+        Parameters
+        ----------
+        network: STN, STNU
+            The simple temporal network the algorithm will be run on.
+        src_idx: int, str
+            An integer representing the index of a node.
+        distances: int[]
+            A list representing the shortest distances between the src and all
+            the nodes. Intialised to infinity besides the src to src intialised
+            to 0.
+        potential_function: int[]
+            An array representing the shortest distances from the src to all
+            nodes. For Johnsons it is generated using Bellman Ford's aribitrary
+            node variant.
+        Returns
+        -------
+        distances: int[]
+            A list representing the shortest distances between the src and all
+            the nodes.
+        """
         reweighted_edges = deepcopy(network.successor_edges)
 
         for node_idx, dict_of_edges in enumerate(reweighted_edges):

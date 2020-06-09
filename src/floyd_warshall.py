@@ -1,7 +1,25 @@
 class FloydWarshall:
+    """
+    A class to represent the FloydWarshall algorithm.
+    ...
+    Methods
+    -------
+    floyd_warshall
+    """
 
     @staticmethod
     def floyd_warshall(network):
+        """
+        A static method that calculates the shortest distances between all nodes.
+        Parameters
+        ----------
+        network: STN, STNU
+            The simple temporal network the algorithm is going to be run on.
+        Returns
+        -------
+        distance_matrix: int[][]
+            A 2x2 array representing the shortest distances between all nodes.
+        """
         length = network.length
         distance_matrix = [[float("inf") for i in range(length)]
                            for j in range(length)]
