@@ -3,9 +3,11 @@ from bellman_ford import BellmanFord
 from dijkstra import Dijkstra
 from johnson import Johnson
 from dispatch import Dispatch
+from tarjan import Tarjan
 
 
-__all__ = ['floyd_warshall', 'bellman_ford', 'dijkstra', 'johnson', 'dispatch']
+__all__ = ['floyd_warshall', 'bellman_ford',
+           'dijkstra', 'johnson', 'dispatch', 'tarjan']
 
 
 def floyd_warshall(network):
@@ -26,3 +28,8 @@ def johnson(network):
 
 def dispatch(network):
     return Dispatch.convert_to_dispatchable(network)
+
+
+def tarjan(network):
+    t = Tarjan(network)
+    return t.tarjan()
