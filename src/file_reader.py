@@ -1,6 +1,7 @@
 from stn import STN
 from stnu import STNU
 from algorithms import *
+from random_stn import RandomSTN
 
 
 class FileReader:
@@ -170,33 +171,38 @@ class FileReader:
 
 f = FileReader()
 
-stn = f.read_file("../sample_stns/dc-2.stn")
-print("########### TESTING FLOYD WARSHALL ###########")
-floyd_warshall(stn)
+# stn = f.read_file("../sample_stns/dc-2.stn")
+# print("########### TESTING FLOYD WARSHALL ###########")
+# floyd_warshall(stn)
+#
+# print(stn)
+#
+# print("########### TESTING BELLMAN FORD ###########")
+# for i in range(1, 6):
+#     bellman_ford(stn, i)
+#     print(stn)
+#
+# print("########### TESTING BELLMAN FORD ###########")
+#
+# bellman_ford(stn)
+#
+# print(stn)
+#
+# print("########### TESTING DIJKSTRA ###########")
+#
+# for i in range(1, 5):
+#     dijkstra(stn, i)
+#     print(stn)
+#
+# print("########### TESTING JOHNSON ###########")
+#
+# johnson(stn)
+#
+# print(stn)
+#
+# dispatch(stn)
 
-print(stn)
 
-print("########### TESTING BELLMAN FORD ###########")
-for i in range(1, 6):
-    bellman_ford(stn, i)
-    print(stn)
-
-print("########### TESTING BELLMAN FORD ###########")
-
-bellman_ford(stn)
-
-print(stn)
-
-print("########### TESTING DIJKSTRA ###########")
-
-for i in range(1, 5):
-    dijkstra(stn, i)
-    print(stn)
-
-print("########### TESTING JOHNSON ###########")
-
-johnson(stn)
-
-print(stn)
-
-dispatch(stn)
+R = RandomSTN()
+for i in R.random_stns(5,5):
+    print(i)
