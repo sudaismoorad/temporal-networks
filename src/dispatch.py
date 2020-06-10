@@ -26,11 +26,11 @@ class Dispatch:
 
         contracted_graphs = set(rigid_components)
 
-        def _dfs(idx):
-            visited.add(idx)
+        def _dfs(graph, idx):
             for succ in network.successor_edges[idx]:
                 if not succ in visited:
-                    _dfs(succ)
+                    _dfs(graph, succ)
+            visited.add(idx)
             order.append(idx)
 
         for src_idx in contracted_graphs:
@@ -38,7 +38,7 @@ class Dispatch:
                 network, src_idx, potential_function=potential_function)
             visited = set()
             order = []
-            _dfs(src_idx)
+            _dfs(predecessor_graph, src_idx)
             order = order[::-1]
 
         return distance_matrix
