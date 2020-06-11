@@ -204,5 +204,7 @@ f = FileReader()
 
 
 R = RandomSTN()
-for i in R.random_stns(5,5):
-    print(i)
+
+
+R.random_stns(5,5)
+    
