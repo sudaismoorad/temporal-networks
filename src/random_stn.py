@@ -102,3 +102,14 @@ class RandomSTN:
              str(network.length) + "\n", "# Num Ordinary Edges \n", str(edge_counter) + "\n",
              "# Time-Point Names \n", names_string + "\n", "# Ordinary Edges \n", edge_string]
         file.writelines(L)
+
+        # alpha => the grid ratio (P/T)
+        # beta => grid density (no_grid_points : no_of_nodes => |V|)
+        # s_min, s_max => real and non-negative, control the amplitude of the
+        #                 interval between two nodes
+        # u => the number of units per each grid interval
+        def ntm(self, no_of_nodes, alpha, beta, edge_density, s_min, s_max, u):
+            pass
+
+        def random_mappping(self, alpha, beta):
+            pass
