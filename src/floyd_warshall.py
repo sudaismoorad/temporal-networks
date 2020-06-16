@@ -39,9 +39,15 @@ class FloydWarshall:
         for node_idx, edge_dict in enumerate(network.successor_edges):
             for successor_node_idx, weight in edge_dict.items():
                 distance_matrix[node_idx][successor_node_idx] = weight
+
             # Note:  This is optional... it can be useful to have
             # values > 0 here (they would indicate that length of
             # shortest loop containing a given node)
+
+            # we could run a bfs here to add the length of the shortest
+            # loop... shouldnt affect time complexity.... if we are
+            # worried about it we could run the dfs before the for loop
+            # and store the results in an array
             distance_matrix[node_idx][node_idx] = 0
 
         for i in range(length):

@@ -47,6 +47,7 @@ class Dispatch:
             # order = []
             # _dfs(predecessor_graph, src_idx)
             # order = order[::-1]
+            print(list_of_distances, predecessor_graph)
 
         return distance_matrix
 
@@ -58,7 +59,7 @@ class Dispatch:
     @staticmethod
     def convert_to_dispatchable(network):
         # O(N^3) time, O(N^2) extra space
-        if not network.flag and network.distance_matrix:
+        if not network.dist_up_to_date and network.distance_matrix:
             pass
         else:
             Johnson.johnson(network)
@@ -90,7 +91,7 @@ class Dispatch:
         for node_idx, succ_idx in marked_edges:
             network.delete_edge(node_idx, succ_idx)
 
-        return marked_edges
+        return network
 
     @staticmethod
     def _get_intersecting_edges(network):

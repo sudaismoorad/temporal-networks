@@ -89,6 +89,10 @@ class STN:
                 stringy += "Distance matrix might not be up to date"
         return stringy
 
+    # def num_tps(self):
+    #     # should we make the length attribute private?
+    #     return self.n
+
     def insert_new_edge(self, tp1, tp2, weight):
         """
         ----------------------------------------------
@@ -157,13 +161,29 @@ class STN:
         self.names_list[self.length] = tp
         self.length += 1
 
-# Discuss whether to keep this or no
+    # Discuss whether to keep this or no
+    # should we make a generator for traversing through the stn
     def delete_tp(self, tp):
         if type(tp) == str:
             tp_idx = self.names_dict[tp]
         else:
             tp_idx = tp
 
-        del self.names_dict[self.names_list[tp_idx]]
-        self.names_list.pop(tp_idx)
+        temp_names_dict = {}
+        temp_names_list = []
+        temp_successor_edges = [[] for i in range(len(self.successor_edges))]
+
+        for i in range(self.length):
+            if i == tp_idx:
+                continue
+            node_name = self.names_list[i]
+            temp_names_dict[node_name] = i
+            temp_names_list.append(node_name)
+            for j, weight in self.successor_edges[i]:
+                if j == tp_idx:
+                    continue
+                temp_successor_edges[i].append((j, weight))
+
+        self.names_list = temp_names_list
+        self.names_dict = temp_names_dict
         self.length -= 1
