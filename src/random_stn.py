@@ -1,10 +1,10 @@
 from stn import STN
-from random import random
+from random import random, randrange
 
 
 class RandomSTN:
 
-    def random_stns(self, no_of_stns, max_no_of_nodes, max_weight=100):
+    def random_stns(self, no_of_stns, max_no_of_nodes, max_weight=100, min_weight=-100):
         """
          random_stns: Generates and writes to files as many STNs as the user
                       wants.
@@ -24,12 +24,12 @@ class RandomSTN:
         for _ in range(no_of_stns):
             num = int(random() * max_no_of_nodes + 1)
             num = max(3, num)
-            network = self.random_stn(num, max_weight)
+            network = self.random_stn(num, max_weight, min_weight)
             networks.append(network)
             self.write_stn(network, _)
         return networks
 
-    def random_stn(self, no_of_nodes, max_weight=100, density_probability=None, node_names=None):
+    def random_stn(self, no_of_nodes, max_weight=100, min_weight=-100, density_probability=None, node_names=None):
         """
          random_stn: Generates a random STN.
          -------------------------------------------------------------
@@ -52,10 +52,10 @@ class RandomSTN:
         for node_idx, node in enumerate(node_names):
             network.names_dict[node] = node_idx
         network.successor_edges = [{} for i in range(network.length)]
-        self.random_edges(network, max_weight, density_probability)
+        self.random_edges(network, max_weight, min_weight, density_probability)
         return network
 
-    def random_edges(self, network, max_weight=100, density_probability=None):
+    def random_edges(self, network, max_weight=100, min_weight=-100, density_probability=None):
         """
          random_edges: Randomly populates the successor_edges of a randomly
                        generated STN.
@@ -72,10 +72,22 @@ class RandomSTN:
          """
         if not density_probability or density_probability > 1 or type(density_probability) != float:
             density_probability = random()
+        counter = 0
         for i in range(network.length):
             for j in range(network.length):
-                if random() < density_probability:
-                    network.successor_edges[i][j] = int(random() * max_weight)
+                rand = random()
+                if rand < 0.5 * density_probability:
+                    network.successor_edges[i][j] = int(
+                        randrange(1, max_weight, 1))
+                    counter += 1
+                elif rand < density_probability:
+                    network.successor_edges[i][j] = int(
+                        randrange(min_weight, -1, 1))
+                    counter += 1
+        if counter == 0:
+            network.successor_edges[randrange(
+                0, network.length, 1)][randrange(0, network.length, 1)] = int(
+                randrange(min_weight, -1, 1))
 
     def write_stn(self, network, stn_no):
         """
@@ -96,10 +108,12 @@ class RandomSTN:
             names_string += name + " "
         for src_idx, dict in enumerate(network.successor_edges):
             for successor_idx, weight in dict.items():
-                edge_string += str(network.names_list[src_idx]) + " " + str(weight) + " " + str(network.names_list[successor_idx]) + "\n"
+                edge_string += str(network.names_list[src_idx]) + " " + str(
+                    weight) + " " + str(network.names_list[successor_idx]) + "\n"
                 edge_counter += 1
         L = ["# KIND OF NETWORK \n", "STN" + "\n", "# Num Time-Points \n",
-             str(network.length) + "\n", "# Num Ordinary Edges \n", str(edge_counter) + "\n",
+             str(network.length) +
+             "\n", "# Num Ordinary Edges \n", str(edge_counter) + "\n",
              "# Time-Point Names \n", names_string + "\n", "# Ordinary Edges \n", edge_string]
         file.writelines(L)
 

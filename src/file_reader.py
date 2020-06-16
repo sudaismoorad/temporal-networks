@@ -206,5 +206,4 @@ f = FileReader()
 R = RandomSTN()
 
 
-R.random_stns(5,5)
-    
+R.random_stns(5, 5)

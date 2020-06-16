@@ -22,24 +22,31 @@ class Dispatch:
 
         # [0, 0, 0, 3, 4, 4, 4, 3]
 
-        rigid_components = Dispatch._tarjan(network)
+        min_leaders = Dispatch._tarjan(network)
 
-        contracted_graphs = set(rigid_components)
+        # [0, 3, 4]
 
-        def _dfs(graph, idx):
-            for succ in network.successor_edges[idx]:
-                if not succ in visited:
-                    _dfs(graph, succ)
-            visited.add(idx)
-            order.append(idx)
+        list_of_leaders = set(min_leaders)
 
-        for src_idx in contracted_graphs:
-            predecessor_graph = Dijkstra.dijkstra(
-                network, src_idx, potential_function=potential_function)
-            visited = set()
-            order = []
-            _dfs(predecessor_graph, src_idx)
-            order = order[::-1]
+        # def _dfs(graph, idx):
+        #     for succ in network.successor_edges[idx]:
+        #         if not succ in visited:
+        #             _dfs(graph, succ)
+        #     visited.add(idx)
+        #     order.append(idx)
+
+        for src_idx in list_of_leaders:
+            # src_idx = 0
+            # path from 0 to 3 = [0, 1, 2, 3]
+            # predecessor_graph = [[path from 3 to 0], [path from 4 to 0]]
+            # list_of_distances = [[0, 12, 4], [0, 79123, 9712]]
+            list_of_distances, predecessor_graph = Dijkstra.dijkstra(
+                network, src_idx, potential_function=potential_function, path=True, list_of_leaders=list_of_leaders)
+            # do we even need the dfs now? if we do, we have to do this for all paths in the predecessor graph
+            # visited = set()
+            # order = []
+            # _dfs(predecessor_graph, src_idx)
+            # order = order[::-1]
 
         return distance_matrix
 

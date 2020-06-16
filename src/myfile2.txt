@@ -1,25 +1,17 @@
 # KIND OF NETWORK 
 STN
 # Num Time-Points 
-4
+3
 # Num Ordinary Edges 
-16
+8
 # Time-Point Names 
-0 1 2 3 
+0 1 2 
 # Ordinary Edges 
-0 78 0
-0 68 1
-0 28 2
-0 79 3
-1 24 0
-1 75 1
-1 31 2
-1 11 3
-2 29 0
-2 12 1
-2 20 2
-2 75 3
-3 19 0
-3 80 1
-3 41 2
-3 79 3
+0 -5 0
+0 -79 2
+1 93 0
+1 26 1
+1 24 2
+2 -13 0
+2 -66 1
+2 -69 2
