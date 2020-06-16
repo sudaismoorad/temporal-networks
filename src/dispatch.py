@@ -15,7 +15,7 @@ class Dispatch:
 
         distance_matrix = [[] for x in range(network.length)]
 
-        potential_function = BellmanFord.bellman_ford(network)
+        potential_function = BellmanFord.bellman_ford_wrapper(network)
 
         if not potential_function:
             return False

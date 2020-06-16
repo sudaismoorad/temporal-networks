@@ -183,11 +183,11 @@ f = FileReader()
 #     print(stn)
 #
 # print("########### TESTING BELLMAN FORD ###########")
-#
+
 # bellman_ford(stn)
-#
+
 # print(stn)
-#
+
 # print("########### TESTING DIJKSTRA ###########")
 #
 # for i in range(1, 5):
@@ -203,8 +203,8 @@ f = FileReader()
 # dispatch(stn)
 
 
-R = RandomSTN()
+# R = RandomSTN()
 
 
-R.random_stns(5,5)
+# R.random_stns(5,5)
     

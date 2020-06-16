@@ -1,7 +1,15 @@
+# ==============================================
+#  FILE:     bellman_ford.py
+#  AUTHOR:   Sudais Moorad / Muhammad Furrukh Asif
+#  DATE:     June 2020
+# ==============================================
+
+
 class FloydWarshall:
     """
+    -------------------------------------------------
     A class to represent the FloydWarshall algorithm.
-    ...
+    -------------------------------------------------
     Methods
     -------
     floyd_warshall
@@ -9,24 +17,31 @@ class FloydWarshall:
 
     @staticmethod
     def floyd_warshall(network):
-        """
+       """
+        -------------------------------------------------------------------------
         A static method that calculates the shortest distances between all nodes.
+        -------------------------------------------------------------------------
         Parameters
         ----------
-        network: STN, STNU
+        network: STN
             The simple temporal network the algorithm is going to be run on.
         Returns
         -------
         distance_matrix: int[][]
-            A 2x2 array representing the shortest distances between all nodes.
+            A NxN array representing the shortest distances between all nodes.
         """
         length = network.length
         distance_matrix = [[float("inf") for i in range(length)]
                            for j in range(length)]
 
+        # ??
+        # Initialize matrix entries to match the edges in the network
         for node_idx, edge_dict in enumerate(network.successor_edges):
             for successor_node_idx, weight in edge_dict.items():
                 distance_matrix[node_idx][successor_node_idx] = weight
+            # Note:  This is optional... it can be useful to have
+            # values > 0 here (they would indicate that length of 
+            # shortest loop containing a given node)
             distance_matrix[node_idx][node_idx] = 0
 
         for i in range(length):
@@ -37,13 +52,10 @@ class FloydWarshall:
 
         for node_idx in range(length):
             if distance_matrix[node_idx][node_idx] < 0:
-                # raise Exception or return False?
-                # raise Exception("Negative cycle found")
                 return False
 
         if network.flag:
             network.flag = False
 
         network.distance_matrix = distance_matrix
-        # should we return the distance matrix also?
         return distance_matrix

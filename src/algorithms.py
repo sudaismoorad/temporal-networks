@@ -15,7 +15,7 @@ def floyd_warshall(network):
 
 
 def bellman_ford(network, src=-1):
-    return BellmanFord.bellman_ford(network, src)
+    return BellmanFord.bellman_ford_wrapper(network, src)
 
 
 def dijkstra(network, src, succ_direction=True, potential_function=False):

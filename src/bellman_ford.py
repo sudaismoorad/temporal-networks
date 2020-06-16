@@ -1,29 +1,39 @@
-from copy import deepcopy
+# ==============================================
+#  FILE:     bellman_ford.py
+#  AUTHOR:   Sudais Moorad / Muhammad Furrukh Asif
+#  DATE:     June 2020
+# ==============================================
 
 
 class BellmanFord:
     """
-    A class to represent all variants of the Bellman Ford algorithm.
-    ...
+    -----------------------------------------------------------------
+    A class to hold several variants of the Bellman Ford 
+    algorithm, each implemented as a static method.
+    -----------------------------------------------------------------
     Methods
     -------
-    bellman_ford
-    _bellman_ford
-    _bellman_ford_new
+    bellman_ford_wrapper   
+    bellman_ford_existing_src
+    bellman_ford_external_source
     """
 
+    # =================================================================
     @staticmethod
-    def bellman_ford(network, src=-1):
+    def bellman_ford_wrapper(network, src=-1):
         """
+        ------------------------------------------------------------------------
         A static method that calls one of the Bellman Ford variants depending on
         if the source is in the network or no.
+        ------------------------------------------------------------------------
         Parameters
         ----------
-        network: STN, STNU
+        network: STN
             The simple temporal network the algorithm will be run on.
         src: int, str
-            An integer or string representing the index / name of a node. If
-            not given the default is -1.
+            An integer or string representing the index / name of a node. If 
+            src not given, then a new source node is used that does not belong 
+            to the given STN.
         Returns
         -------
         distances: int[]
@@ -31,18 +41,20 @@ class BellmanFord:
             the nodes.
         """
         if src in network.names_dict.values():
-            return BellmanFord._bellman_ford(network, src)
+            return BellmanFord.bellman_ford_existing_src(network, src)
         else:
-            return BellmanFord._bellman_ford_new(network)
+            return BellmanFord.bellman_ford_external_source(network)
 
     @staticmethod
-    def _bellman_ford(network, src):
+    def bellman_ford_existing_src(network, src):
         """
+        ------------------------------------------------------------------------
         A static method that executes a variant of Bellman Ford where the given
         src exists in the network.
+        ------------------------------------------------------------------------
         Parameters
         ----------
-        network: STN, STNU
+        network: STN  
             The simple temporal network the algorithm will be run on.
         src: int, str
             An integer or string representing the index / name of a node in
@@ -50,8 +62,9 @@ class BellmanFord:
         Returns
         -------
         distances: int[]
-            A list representing the shortest distances between the src and all
-            the nodes.
+            A list representing the shortest distances from the src to
+            every node in the network
+        --------------------------------------------------------------------------
         """
         if type(src) == str:
             src_idx = network.names_dict[src]
@@ -61,6 +74,44 @@ class BellmanFord:
         distances = [float("inf") for _ in range(length)]
         distances[src_idx] = 0
 
+        # First N-1 passes of bellman ford
+        for _ in range(length - 1):
+            for node_idx in range(length):
+                # Consider every edge emanating from NODE_IDX
+                for successor_node_idx, weight in network.successor_edges[node_idx].items():
+                    # Update distance if SRC -> NODE_IDX -> SUCCESSOR_NODE_IDX is shorter path
+                    distances[successor_node_idx] = min(
+                        distances[successor_node_idx], distances[node_idx] + weight)
+
+        # Last pass of bellman ford (checks for negative cycle)
+        for node_idx in range(length):
+            for successor_node_idx, weight in network.successor_edges[node_idx].items():
+                if distances[successor_node_idx] > distances[node_idx] + weight:
+                    return False
+
+        return distances
+
+    @staticmethod
+    def bellman_ford_external_source(network):
+        """
+        -------------------------------------------------------------------------
+        A static method that executes a variant of Bellman Ford where a new
+        node, not belonging to the network, is used as a source node
+        -------------------------------------------------------------------------
+        Parameters
+        ----------
+        network: STN  *** only STN for now ***
+            The simple temporal network the algorithm will be run on.
+        Returns
+        -------
+        distances: int[]
+            A list representing the shortest distances from the new 
+            source node and all the nodes in the network
+        --------------------------------------------------------------------------
+        """
+        length = network.length
+        distances = [0 for _ in range(length)]
+        
         for _ in range(length - 1):
             for node_idx in range(length):
                 for successor_node_idx, weight in network.successor_edges[node_idx].items():
@@ -70,45 +121,6 @@ class BellmanFord:
         for node_idx in range(length):
             for successor_node_idx, weight in network.successor_edges[node_idx].items():
                 if distances[successor_node_idx] > distances[node_idx] + weight:
-                    # raise Exception("are we supposed to throw an error here?")
-                    return False
-
-        return distances
-
-    @staticmethod
-    def _bellman_ford_new(network):
-        """
-        A static method that executes a variant of Bellman Ford where the source
-        is not given rather its an arbitrary node.
-        Parameters
-        ----------
-        network: STN, STNU
-            The simple temporal network the algorithm will be run on.
-        Returns
-        -------
-        distances: int[]
-            A list representing the shortest distances between an aribitrary
-            node and all the nodes.
-        """
-        length = network.length
-        distances = [float("inf") for _ in range(length)]
-        successor_edges = deepcopy(network.successor_edges)
-
-        distances.append(0)
-        successor_edges.append({})
-        for i in range(length):
-            successor_edges[length][i] = 0
-
-        for _ in range(length):
-            for node_idx in range(length + 1):
-                for successor_node_idx, weight in successor_edges[node_idx].items():
-                    distances[successor_node_idx] = min(
-                        distances[successor_node_idx], distances[node_idx] + weight)
-
-        for node_idx in range(length + 1):
-            for successor_node_idx, weight in successor_edges[node_idx].items():
-                if distances[successor_node_idx] > distances[node_idx] + weight:
-                    # raise Exception("are we supposed to throw an error here?")
                     return False
 
         return distances[:-1]
