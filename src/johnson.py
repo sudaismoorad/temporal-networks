@@ -28,8 +28,8 @@ class Johnson:
             distance_matrix[node_idx] = Dijkstra.dijkstra(
                 network, node_idx, potential_function=potential_function)
 
-        if network.flag:
-            network.flag = False
+        if network.dist_up_to_date:
+            network.dist_up_to_date = False
 
-        # network.distance_matrix = distance_matrix
+        network.distance_matrix = distance_matrix
         return distance_matrix

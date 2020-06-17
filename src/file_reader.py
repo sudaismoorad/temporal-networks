@@ -171,7 +171,8 @@ class FileReader:
 
 f = FileReader()
 
-# stn = f.read_file("../sample_stns/dc-2.stn")
+stn = f.read_file("../sample_stns/dc-2.stn")
+print(dispatch(stn))
 # print("########### TESTING FLOYD WARSHALL ###########")
 # floyd_warshall(stn)
 #

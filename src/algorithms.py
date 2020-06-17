@@ -11,7 +11,7 @@ __all__ = ['floyd_warshall', 'bellman_ford',
 
 
 def floyd_warshall(network):
-    return FloydWarshall.bellman_ford_wrapper(network)
+    return FloydWarshall.floyd_warshall(network)
 
 
 def bellman_ford(network, src=-1):
@@ -27,7 +27,7 @@ def johnson(network):
 
 
 def dispatch(network):
-    return Dispatch.convert_to_dispatchable(network)
+    return Dispatch.fast_dipsatch(network)
 
 
 def tarjan(network):

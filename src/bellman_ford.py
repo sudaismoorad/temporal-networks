@@ -123,4 +123,4 @@ class BellmanFord:
                 if distances[successor_node_idx] > distances[node_idx] + weight:
                     return False
 
-        return distances[:-1]
+        return distances

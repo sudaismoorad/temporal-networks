@@ -15,7 +15,7 @@ class Dijkstra:
     """
 
     @staticmethod
-    def dijkstra(network, src, succ_direction=True, potential_function=False, path=False, list_of_leaders=None):
+    def dijkstra(network, src, succ_direction=True, potential_function=False, path=False, list_of_leaders=None, d=None):
         """
         A static method that calls one of the variants of Dikstra's algorithm
         depending on the inputs given.
@@ -50,7 +50,7 @@ class Dijkstra:
         if path:
             if not list_of_leaders:
                 return False
-            return Dijkstra._dispatch_dijkstra(network, src_idx, distances, potential_function, list_of_leaders)
+            return Dijkstra._dispatch_dijkstra(network, src_idx, distances, potential_function, list_of_leaders, d)
 
         if not potential_function:
             if succ_direction:
@@ -174,7 +174,7 @@ class Dijkstra:
 
         for node_idx, dict_of_edges in enumerate(reweighted_edges):
             # do we not need tuple_idx?
-            for tuple_idx, (successor_idx, weight) in enumerate(dict_of_edges.items()):
+            for _, (successor_idx, weight) in enumerate(dict_of_edges.items()):
                 reweighted_edges[node_idx][successor_idx] = weight + \
                     potential_function[node_idx] - \
                     potential_function[successor_idx]
@@ -208,15 +208,19 @@ class Dijkstra:
         return distances
 
     @staticmethod
-    def _dispatch_dijkstra(network, src_idx, distances, potential_function, list_of_leaders):
+    def _dispatch_dijkstra(network, src_idx, distances, potential_function, list_of_leaders, d):
         predecessor_graphs = [[] for i in list_of_leaders]
         list_of_distances = [[] for i in list_of_leaders]
-        for idx, leader in enumerate(list_of_leaders):
+        print(src_idx)
+        for idx, leader in enumerate(d):
+            # print(leader)
+            if leader == src_idx:
+                continue
             reweighted_edges = deepcopy(network.successor_edges)
 
             for node_idx, dict_of_edges in enumerate(reweighted_edges):
                 # do we not need tuple_idx?
-                for tuple_idx, (successor_idx, weight) in enumerate(dict_of_edges.items()):
+                for _, (successor_idx, weight) in enumerate(dict_of_edges.items()):
                     reweighted_edges[node_idx][successor_idx] = weight + \
                         potential_function[node_idx] - \
                         potential_function[successor_idx]
@@ -237,12 +241,11 @@ class Dijkstra:
                     while previous[u_idx] != src_idx:
                         u_idx = previous[u_idx]
                         rtn.append(u_idx)
-                    rtn.append(u_idx)
+                    rtn.append(src_idx)
                     predecessor_graphs[idx] = rtn
                     list_of_distances[idx] = distances
                     break
 
-                # if u
                 for successor_idx, weight in reweighted_edges[u_idx].items():
 
                     new_weight = weight + \
@@ -251,12 +254,12 @@ class Dijkstra:
 
                     if successor_idx not in in_queue:
                         heapq.heappush(min_heap, (new_weight, successor_idx))
+                        previous[successor_idx] = u_idx
                         in_queue[successor_idx] = True
                     else:
                         if (new_weight < distances[successor_idx]):
 
                             distances[successor_idx] = new_weight
-
                             heapq.heappush(
                                 min_heap, (distances[successor_idx], successor_idx))
                             previous[successor_idx] = u_idx

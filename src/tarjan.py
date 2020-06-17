@@ -27,7 +27,7 @@ class Tarjan:
         self.stack.append(idx)
         self.onStack[idx] = True
         self.ids[idx] = self.id
-        self.low[idx] = self.id
+        self.low[idx] = idx
         self.id += 1
 
         # for target_idx in self.graph[idx]:
