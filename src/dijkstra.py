@@ -173,7 +173,6 @@ class Dijkstra:
         reweighted_edges = deepcopy(network.successor_edges)
 
         for node_idx, dict_of_edges in enumerate(reweighted_edges):
-            # do we not need tuple_idx?
             for _, (successor_idx, weight) in enumerate(dict_of_edges.items()):
                 reweighted_edges[node_idx][successor_idx] = weight + \
                     potential_function[node_idx] - \
@@ -183,27 +182,15 @@ class Dijkstra:
         in_queue = {}
 
         heapq.heappush(min_heap, (distances[src_idx], src_idx))
-        in_queue[src_idx] = True
 
         while min_heap:
             _, u_idx = heapq.heappop(min_heap)
-            for successor_idx, weight in reweighted_edges[u_idx].items():
+            for successor_idx, new_weight in reweighted_edges[u_idx].items():
+                if (distances[u_idx] + new_weight < distances[successor_idx]):
+                    distances[successor_idx] = new_weight + distances[u_idx]
 
-                new_weight = weight + \
-                    potential_function[successor_idx] - \
-                    potential_function[u_idx]
-
-                if successor_idx not in in_queue:
-                    heapq.heappush(min_heap, (new_weight, successor_idx))
-                    in_queue[successor_idx] = True
-                else:
-                    if (new_weight < distances[successor_idx]):
-
-                        distances[successor_idx] = new_weight
-
-                        heapq.heappush(
-                            min_heap, (distances[successor_idx], successor_idx))
-                        in_queue[successor_idx] = True
+                    heapq.heappush(
+                        min_heap, (distances[successor_idx], successor_idx))
 
         return distances
 

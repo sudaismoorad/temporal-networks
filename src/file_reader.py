@@ -171,12 +171,12 @@ class FileReader:
 
 f = FileReader()
 
-stn = f.read_file("../sample_stns/dc-2.stn")
-print(dispatch(stn))
-# print("########### TESTING FLOYD WARSHALL ###########")
-# floyd_warshall(stn)
+stn = f.read_file("../sample_stns/dc-3.stn")
+# print(dispatch(stn))
+print("########### TESTING FLOYD WARSHALL ###########")
+floyd_warshall(stn)
 
-# print(stn)
+print(stn)
 
 # print("########### TESTING BELLMAN FORD ###########")
 # for i in range(1, 6):
@@ -195,12 +195,12 @@ print(dispatch(stn))
 #     dijkstra(stn, i)
 #     print(stn)
 #
-# print("########### TESTING JOHNSON ###########")
+print("########### TESTING JOHNSON ###########")
 
-# johnson(stn)
+johnson(stn)
 
-# print(stn)
-#
+print(stn)
+
 # dispatch(stn)
 
 
