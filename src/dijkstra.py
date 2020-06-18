@@ -15,7 +15,7 @@ class Dijkstra:
     """
 
     @staticmethod
-    def dijkstra(network, src, succ_direction=True, potential_function=False, path=False, list_of_leaders=None, d=None):
+    def dijkstra(network, src, succ_direction=True, potential_function=False, path=False, list_of_leaders=None):
         """
         A static method that calls one of the variants of Dikstra's algorithm
         depending on the inputs given.
@@ -50,7 +50,7 @@ class Dijkstra:
         if path:
             if not list_of_leaders:
                 return False
-            return Dijkstra._dispatch_dijkstra(network, src_idx, distances, potential_function, list_of_leaders, d)
+            return Dijkstra._dispatch_dijkstra(network, src_idx, distances, potential_function, list_of_leaders)
 
         if not potential_function:
             if succ_direction:
@@ -208,12 +208,11 @@ class Dijkstra:
         return distances
 
     @staticmethod
-    def _dispatch_dijkstra(network, src_idx, distances, potential_function, list_of_leaders, d):
+    def _dispatch_dijkstra(network, src_idx, distances, potential_function, list_of_leaders):
         predecessor_graphs = [[] for i in list_of_leaders]
         list_of_distances = [[] for i in list_of_leaders]
         print(src_idx)
-        for idx, leader in enumerate(d):
-            # print(leader)
+        for idx, leader in enumerate(list_of_leaders):
             if leader == src_idx:
                 continue
             reweighted_edges = deepcopy(network.successor_edges)

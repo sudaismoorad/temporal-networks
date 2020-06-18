@@ -16,13 +16,12 @@ class Dispatch:
 
         distance_matrix = [[] for x in range(network.length)]
 
-        potential_function = BellmanFord.bellman_ford_wrapper(network)
+        potential_function = FloydWarshall.floyd_warshall(network)
 
         if not potential_function:
             return False
 
         min_leaders = Dispatch._tarjan(network)
-        print(min_leaders)
 
         list_of_leaders = set(min_leaders)
 
@@ -35,46 +34,39 @@ class Dispatch:
                 else:
                     dict_of_children[i] = [idx]
 
-        print(list_of_leaders)
         for src_idx in list_of_leaders:
             list_of_distances, predecessor_graph = Dijkstra.dijkstra(
-                network, src_idx, potential_function=potential_function, path=True, list_of_leaders=list_of_leaders, d=dict_of_children)
-            print(list_of_distances)
-            print(predecessor_graph)
+                network, src_idx, potential_function=potential_function, path=True, list_of_leaders=list_of_leaders)
 
+            print(list_of_distances, predecessor_graph)
+
+            # listy = [path from 3 to 0] = [3, 2, 1, 0]
             for listy in predecessor_graph:
+                print(listy)
                 intersecting_edges = []
-                if len(listy) > 3:
-                    for i in range(len(listy)):
-                        for j in range(len(listy)):
-                            for k in range(len(listy)):
-                                intersecting_edges.append(((i, j), k))
-                    marked_edges = []
-                    for (src_idx, middle_idx), target_idx in intersecting_edges:
-                        D_A_B = list_of_distances[src_idx][middle_idx] + \
-                            list_of_distances[middle_idx][target_idx]
-                        D_C = list_of_distances[src_idx][target_idx]
-                        D_A = list_of_distances[src_idx][middle_idx]
-                        D_C_B = list_of_distances[src_idx][target_idx] + \
-                            list_of_distances[middle_idx][target_idx]
-                        if D_A_B == D_C and D_A == D_C_B:
-                            if (src_idx, target_idx) not in marked_edges and (src_idx, middle_idx) not in marked_edges:
-                                if random() < 0.5:
-                                    marked_edges.append((src_idx, target_idx))
-                                else:
-                                    marked_edges.append((src_idx, middle_idx))
-                        else:
-                            if D_A_B == D_C:
+                # get intersecting edges
+                marked_edges = []
+                for (src_idx, middle_idx), target_idx in intersecting_edges:
+                    D_A_B = list_of_distances[src_idx][middle_idx] + \
+                        list_of_distances[middle_idx][target_idx]
+                    D_C = list_of_distances[src_idx][target_idx]
+                    D_A = list_of_distances[src_idx][middle_idx]
+                    D_C_B = list_of_distances[src_idx][target_idx] + \
+                        list_of_distances[target_idx][middle_idx]
+                    if D_A_B == D_C and D_A == D_C_B:
+                        if (src_idx, target_idx) not in marked_edges and (src_idx, middle_idx) not in marked_edges:
+                            if random() < 0.5:
                                 marked_edges.append((src_idx, target_idx))
-                            if D_A == D_C_B:
+                            else:
                                 marked_edges.append((src_idx, middle_idx))
-
-                    for node_idx, succ_idx in marked_edges:
-                        if succ_idx in network:
-                            network.delete_edge(node_idx, succ_idx)
-
-                print(list_of_distances)
-                print(predecessor_graph)
+                    else:
+                        if D_A_B == D_C:
+                            marked_edges.append((src_idx, target_idx))
+                        if D_A == D_C_B:
+                            marked_edges.append((src_idx, middle_idx))
+                for node_idx, succ_idx in marked_edges:
+                    if succ_idx in network.successor_edges[node_idx]:
+                        network.delete_edge(node_idx, succ_idx)
 
         return network
 
@@ -95,7 +87,8 @@ class Dispatch:
         marked_edges = []
 
         intersecting_edges = Dispatch._get_intersecting_edges(network)
-        print(distance_matrix)
+        print(intersecting_edges)
+        # print(distance_matrix)
         for (src_idx, middle_idx), target_idx in intersecting_edges:
             D_A_B = distance_matrix[src_idx][middle_idx] + \
                 distance_matrix[middle_idx][target_idx]
@@ -103,9 +96,6 @@ class Dispatch:
             D_A = distance_matrix[src_idx][middle_idx]
             D_C_B = distance_matrix[src_idx][target_idx] + \
                 distance_matrix[target_idx][middle_idx]
-            print(src_idx, middle_idx, target_idx)
-            print(D_A_B, D_C)
-            print(D_A, D_C_B)
             if D_A_B == D_C and D_A == D_C_B:
                 if (src_idx, target_idx) not in marked_edges and (src_idx, middle_idx) not in marked_edges:
                     if random() < 0.5:
@@ -128,6 +118,7 @@ class Dispatch:
     def _get_intersecting_edges(network):
         length = network.length
         intersecting_edges = []
+        arr = []
         for i in range(length):
             for j in range(length):
                 if i == j:
@@ -135,5 +126,8 @@ class Dispatch:
                 for k in range(length):
                     if k == i or k == j:
                         continue
+                    if sorted([i, j]) in arr:
+                        continue
+                    arr.append(sorted([i, j]))
                     intersecting_edges.append(((i, j), k))
         return intersecting_edges

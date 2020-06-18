@@ -27,7 +27,7 @@ def johnson(network):
 
 
 def dispatch(network):
-    return Dispatch.convert_to_dispatchable(network)
+    return Dispatch.fast_dipsatch(network)
 
 
 def tarjan(network):

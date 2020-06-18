@@ -5,17 +5,17 @@ STN
 # Num Ordinary Edges
 12
 # Time-Point Names
-B C D Z
+A B C D
 # Ordinary Edges
-B -5 Z
-Z 26 B
-Z 28 C
-C -2 Z
-C 28 D
+A 10 B
+B -1 A
+A 9 C
+C 0 A
+A 11 D
+D -2 A
+B -1 C
+C 1 B
+B 1 D
+D -1 B
+C 2 D
 D -2 C
-D -4 B
-B 25 D
-B 6 C
-C 3 B
-Z 30 D
-D -9 Z
