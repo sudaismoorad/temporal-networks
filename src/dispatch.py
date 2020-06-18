@@ -5,6 +5,7 @@ from dijkstra import Dijkstra
 from collections import deque
 from copy import deepcopy
 from random import random
+from floyd_warshall import FloydWarshall
 
 
 class Dispatch:
@@ -88,20 +89,23 @@ class Dispatch:
         if not network.dist_up_to_date and network.distance_matrix:
             pass
         else:
-            Johnson.johnson(network)
+            FloydWarshall.floyd_warshall(network)
 
         distance_matrix = deepcopy(network.distance_matrix)
         marked_edges = []
 
         intersecting_edges = Dispatch._get_intersecting_edges(network)
-
+        print(distance_matrix)
         for (src_idx, middle_idx), target_idx in intersecting_edges:
             D_A_B = distance_matrix[src_idx][middle_idx] + \
                 distance_matrix[middle_idx][target_idx]
             D_C = distance_matrix[src_idx][target_idx]
             D_A = distance_matrix[src_idx][middle_idx]
             D_C_B = distance_matrix[src_idx][target_idx] + \
-                distance_matrix[middle_idx][target_idx]
+                distance_matrix[target_idx][middle_idx]
+            print(src_idx, middle_idx, target_idx)
+            print(D_A_B, D_C)
+            print(D_A, D_C_B)
             if D_A_B == D_C and D_A == D_C_B:
                 if (src_idx, target_idx) not in marked_edges and (src_idx, middle_idx) not in marked_edges:
                     if random() < 0.5:
@@ -113,7 +117,7 @@ class Dispatch:
                     marked_edges.append((src_idx, target_idx))
                 if D_A == D_C_B:
                     marked_edges.append((src_idx, middle_idx))
-
+        print(marked_edges)
         for node_idx, succ_idx in marked_edges:
             if succ_idx in network.successor_edges[node_idx]:
                 network.delete_edge(node_idx, succ_idx)
@@ -126,6 +130,10 @@ class Dispatch:
         intersecting_edges = []
         for i in range(length):
             for j in range(length):
+                if i == j:
+                    continue
                 for k in range(length):
+                    if k == i or k == j:
+                        continue
                     intersecting_edges.append(((i, j), k))
         return intersecting_edges
