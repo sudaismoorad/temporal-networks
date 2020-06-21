@@ -20,15 +20,15 @@ class Johnson:
         if network.succesor_edges is None:
             return False
         num_tps = network.num_tps()
-        distance_matrix = [[] for x in range(network.num_tps)]
+        distance_matrix = [[] for x in range(num_tps)]
 
         potential_function = BellmanFord.bellman_ford_wrapper(network)
-       
+
         if not potential_function:
             return False
 
         for node_idx in range(network.num_tps):
-            distance_matrix[node_idx] = Dijkstra.dijkstra(
+            distance_matrix[node_idx] = Dijkstra.dijkstra_wrapper(
                 network, node_idx, potential_function=potential_function)
 
         for src_idx, distance_list in enumerate(distance_matrix):
@@ -36,7 +36,6 @@ class Johnson:
                 distance_matrix[src_idx][successor_idx] = weight + \
                     potential_function[successor_idx] - \
                     potential_function[src_idx]
-
 
         if network.dist_up_to_date:
             network.dist_up_to_date = False

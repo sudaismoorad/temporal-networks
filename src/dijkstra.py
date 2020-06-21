@@ -16,7 +16,7 @@ class Dijkstra:
     # How to deal with predecessor edges attribute? Does pred_dijkstra run when predecessor edges given or it always calculates them?
 
     @staticmethod
-    def dijkstra_wrapper(network, src, succ_direction=True, potential_function=False, path=False, list_of_leaders=None):
+    def dijkstra_wrapper(network, src, succ_direction=True, potential_function=False, path=False, dispatch=False):
         """
         A static method that calls one of the variants of Dikstra's algorithm
         depending on the inputs given.
@@ -48,10 +48,10 @@ class Dijkstra:
         distances = [float("inf") for i in range(network.num_tps())]
         distances[src_idx] = 0
 
-        if path:
-            if not list_of_leaders or network.successor_edges is None:
+        if dispatch:
+            if network.successor_edges is None:
                 return False
-            return Dijkstra._dispatch_dijkstra(network, src_idx, distances, potential_function, list_of_leaders)
+            return Dijkstra._dispatch_dijkstra(network, src_idx, distances, potential_function)
 
         if not potential_function:
             if succ_direction:
@@ -120,8 +120,8 @@ class Dijkstra:
             the nodes.
         """
         num_tps = network.num_tps()
-        predecessor_edges = [{} for i in range(network.num_tps)]
-        previous_visited = [False for i in range(network.num_tps)]
+        predecessor_edges = [{} for i in range(num_tps)]
+        previous_visited = [False for i in range(num_tps)]
 
         min_heap = []
 
@@ -181,7 +181,6 @@ class Dijkstra:
                     potential_function[successor_idx]
 
         min_heap = []
-        in_queue = {}
 
         heapq.heappush(min_heap, (distances[src_idx], src_idx))
 
@@ -197,9 +196,8 @@ class Dijkstra:
         return distances
 
     @staticmethod
-    def _dispatch_dijkstra(network, src_idx, distances, potential_function, list_of_leaders):
+    def _dispatch_dijkstra(network, src_idx, distances, potential_function):
         reweighted_edges = deepcopy(network.successor_edges)
-        predecessor_graphs = []
         for node_idx, dict_of_edges in enumerate(reweighted_edges):
             for _, (successor_idx, weight) in enumerate(dict_of_edges.items()):
                 reweighted_edges[node_idx][successor_idx] = weight + \
@@ -208,22 +206,14 @@ class Dijkstra:
 
         min_heap = []
         in_queue = {}
-        previous = ["" for i in range(network.num_tps())]
+        previous = [-1 for i in range(network.num_tps())]
 
         heapq.heappush(min_heap, (distances[src_idx], src_idx))
+        in_queue[src_idx] = True
 
+        print(reweighted_edges)
         while min_heap:
             _, u_idx = heapq.heappop(min_heap)
-            if leader == u_idx:
-                rtn = []
-                rtn.append(u_idx)
-                while previous[u_idx] != src_idx:
-                    u_idx = previous[u_idx]
-                    rtn.append(u_idx)
-                rtn.append(src_idx)
-                predecessor_graphs[idx] = rtn
-                list_of_distances[idx] = distances
-                break
             for successor_idx, new_weight in reweighted_edges[u_idx].items():
                 if (distances[u_idx] + new_weight < distances[successor_idx]):
                     distances[successor_idx] = new_weight + distances[u_idx]
@@ -231,6 +221,13 @@ class Dijkstra:
                     heapq.heappush(
                         min_heap, (distances[successor_idx], successor_idx))
 
+        predecessor_graph = []
+        _, u_idx = heapq.heappop(min_heap)
+        predecessor_graph.append(u_idx)
+        while previous[u_idx] != src_idx:
+            u_idx = previous[u_idx]
+            predecessor_graph.append(u_idx)
+        predecessor_graph.append(src_idx)
         return distances, predecessor_graph
 
         # num_tps = network.num_tps()
@@ -278,17 +275,17 @@ class Dijkstra:
         #             #     potential_function[successor_idx] - \
         #             #     potential_function[u_idx]
 
-        #             if successor_idx not in in_queue:
-        #                 heapq.heappush(min_heap, (new_weight, successor_idx))
-        #                 previous[successor_idx] = u_idx
-        #                 in_queue[successor_idx] = True
-        #             else:
-        #                 if (new_weight < distances[successor_idx]):
+        #    if successor_idx not in in_queue:
+        #         heapq.heappush(min_heap, (new_weight, successor_idx))
+        #         previous[successor_idx] = u_idx
+        #         in_queue[successor_idx] = True
+        #     else:
+        #         if (new_weight < distances[successor_idx]):
 
-        #                     distances[successor_idx] = new_weight
-        #                     heapq.heappush(
-        #                         min_heap, (distances[successor_idx], successor_idx))
-        #                     previous[successor_idx] = u_idx
-        #                     in_queue[successor_idx] = True
+        #             distances[successor_idx] = new_weight
+        #             heapq.heappush(
+        #                 min_heap, (distances[successor_idx], successor_idx))
+        #             previous[successor_idx] = u_idx
+        #             in_queue[successor_idx] = True
 
         # return list_of_distances, predecessor_graphs
