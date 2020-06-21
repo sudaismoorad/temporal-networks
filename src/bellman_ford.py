@@ -40,6 +40,8 @@ class BellmanFord:
             A list representing the shortest distances between the src and all
             the nodes.
         """
+        if network.successor_edges is None:
+            return False
         if src in network.names_dict.values():
             return BellmanFord.bellman_ford_existing_src(network, src)
         else:
@@ -70,13 +72,13 @@ class BellmanFord:
             src_idx = network.names_dict[src]
         else:
             src_idx = src
-        length = network.length
-        distances = [float("inf") for _ in range(length)]
+        num_tps = network.num_tps()
+        distances = [float("inf") for _ in range(num_tps)]
         distances[src_idx] = 0
 
         # First N-1 passes of bellman ford
-        for _ in range(length - 1):
-            for node_idx in range(length):
+        for _ in range(num_tps - 1):
+            for node_idx in range(num_tps):
                 # Consider every edge emanating from NODE_IDX
                 for successor_node_idx, weight in network.successor_edges[node_idx].items():
                     # Update distance if SRC -> NODE_IDX -> SUCCESSOR_NODE_IDX is shorter path
@@ -84,7 +86,7 @@ class BellmanFord:
                         distances[successor_node_idx], distances[node_idx] + weight)
 
         # Last pass of bellman ford (checks for negative cycle)
-        for node_idx in range(length):
+        for node_idx in range(num_tps):
             for successor_node_idx, weight in network.successor_edges[node_idx].items():
                 if distances[successor_node_idx] > distances[node_idx] + weight:
                     return False
@@ -109,16 +111,16 @@ class BellmanFord:
             source node and all the nodes in the network
         --------------------------------------------------------------------------
         """
-        length = network.length
-        distances = [0 for _ in range(length)]
+        num_tps = network.num_tps()
+        distances = [0 for _ in range(num_tps)]
 
-        for _ in range(length - 1):
-            for node_idx in range(length):
+        for _ in range(num_tps - 1):
+            for node_idx in range(num_tps):
                 for successor_node_idx, weight in network.successor_edges[node_idx].items():
                     distances[successor_node_idx] = min(
                         distances[successor_node_idx], distances[node_idx] + weight)
 
-        for node_idx in range(length):
+        for node_idx in range(num_tps):
             for successor_node_idx, weight in network.successor_edges[node_idx].items():
                 if distances[successor_node_idx] > distances[node_idx] + weight:
                     return False

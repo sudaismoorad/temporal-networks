@@ -4,11 +4,11 @@ from collections import deque
 class Tarjan:
 
     def __init__(self, network):
-        self.length = network.length
+        self.num_tps = network.num_tps()
         self.network = network
-        self.ids = [-1 for _ in range(self.length)]
-        self.low = [0 for _ in range(self.length)]
-        self.onStack = [False for _ in range(self.length)]
+        self.ids = [-1 for _ in range(self.num_tps)]
+        self.low = [0 for _ in range(self.num_tps)]
+        self.onStack = [False for _ in range(self.num_tps)]
         self.stack = deque()
         self.id = 0
 
@@ -17,7 +17,7 @@ class Tarjan:
         # and hence the rigid component subgraphs
         # runs in O(V + E) time
 
-        for i in range(self.length):
+        for i in range(self.num_tps):
             if self.ids[i] == -1:
                 self._dfs(i)
 

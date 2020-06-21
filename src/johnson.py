@@ -17,14 +17,17 @@ class Johnson:
         distance_matrix : List[List[int]]
             A 2-D list representing the shortest distances between all the nodes
         """
-        distance_matrix = [[] for x in range(network.length)]
+        if network.succesor_edges is None:
+            return False
+        num_tps = network.num_tps()
+        distance_matrix = [[] for x in range(network.num_tps)]
 
         potential_function = BellmanFord.bellman_ford_wrapper(network)
        
         if not potential_function:
             return False
 
-        for node_idx in range(network.length):
+        for node_idx in range(network.num_tps):
             distance_matrix[node_idx] = Dijkstra.dijkstra(
                 network, node_idx, potential_function=potential_function)
 

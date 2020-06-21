@@ -17,6 +17,7 @@ class FloydWarshall:
 
     @staticmethod
     def floyd_warshall(network):
+        # If successor edges not given, should this run on predecessor edges?
         """
         -------------------------------------------------------------------------
         A static method that calculates the shortest distances between all nodes.
@@ -30,9 +31,11 @@ class FloydWarshall:
         distance_matrix: int[][]
             A NxN array representing the shortest distances between all nodes.
         """
-        length = network.length
-        distance_matrix = [[float("inf") for i in range(length)]
-                           for j in range(length)]
+        if network.successor_edges is None:
+            return False
+        num_tps = network.num_tps()
+        distance_matrix = [[float("inf") for i in range(num_tps)]
+                           for j in range(num_tps)]
 
         # ??
         # Initialize matrix entries to match the edges in the network
@@ -50,13 +53,13 @@ class FloydWarshall:
             # and store the results in an array
             distance_matrix[node_idx][node_idx] = 0
 
-        for i in range(length):
-            for j in range(length):
-                for k in range(length):
+        for i in range(num_tps):
+            for j in range(num_tps):
+                for k in range(num_tps):
                     distance_matrix[i][j] = min(
                         distance_matrix[i][j], distance_matrix[i][k] + distance_matrix[k][j])
 
-        for node_idx in range(length):
+        for node_idx in range(num_tps):
             if distance_matrix[node_idx][node_idx] < 0:
                 return False
 

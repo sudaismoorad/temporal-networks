@@ -20,7 +20,7 @@ class FileReader:
     read_file
     """
 
-    def __init__(self):
+    def __init__(self, successor_edges=True, predecessor_edges=False):
         """
         Constructor for the file reader
         Parameters
@@ -33,6 +33,8 @@ class FileReader:
         -------
         None
         """
+        self.predecessor_edges = predecessor_edges
+        self.successor_edges = successor_edges
 
     def read_file(self, file_path):
         """
@@ -59,7 +61,7 @@ class FileReader:
                     raise Exception("Invalid Network Type")
 
     def _read_stn(self, file):
-        network = STN()
+        network = STN(successor_edges=self.successor_edges, predecessor_edges=self.predecessor_edges)
         state = ""
         for line in file:
             if line.startswith('#'):
@@ -80,11 +82,15 @@ class FileReader:
                     pass
             else:
                 if state == 'NO_POINTS':
-                    num_points = int(line)
-                    network.length = num_points
-                    network.successor_edges = [
-                        {} for i in range(num_points)]
-                    network.names_list = ["0" for i in range(num_points)]
+                    num_tps = int(line)
+                    network.n = num_tps
+                    if self.successor_edges:
+                        network.successor_edges = [
+                            {} for i in range(num_tps)]
+                    if self.predecessor_edges:
+                        network.predecessor_edges = [
+                            {} for i in range(num_tps)]
+                    network.names_list = ["0" for i in range(num_tps)]
                 elif state == 'NO_EDGES':
                     num_edges = int(line)
                 elif state == 'NO_LINKS':
@@ -93,20 +99,26 @@ class FileReader:
                         "Simple Temporal Networks do not have contingent links.")
                 elif state == 'NAMES':
                     list_of_nodes = line.split()
-                    if len(list_of_nodes) != num_points:
+                    if len(list_of_nodes) != num_tps:
                         raise Exception(
                             "Number of names does not match the number of nodes provided")
                     for idx, node_name in enumerate(list_of_nodes):
                         network.names_dict[node_name] = idx
                         network.names_list[idx] = node_name
                 elif state == 'EDGES':
+                    if num_edges == 0:
+                        state = ''
+                        continue
                     weights = line.split()
                     edge_counter += 1
                     # make a list of list of tuples
                     idx_node = network.names_dict[weights[0]]
                     idx_successor = network.names_dict[weights[2]]
-                    network.successor_edges[idx_node][idx_successor] = int(
+                    if self.successor_edges:
+                        network.successor_edges[idx_node][idx_successor] = int(
                         weights[1])
+                    if self.predecessor_edges:
+                        network.predecessor_edges[idx_successor][idx_node] = int(weights[1])
                 elif state == 'LINKS':
                     raise Exception(
                         "Simple Temporal Networks do not have contingent links.")
@@ -171,18 +183,18 @@ class FileReader:
 
 f = FileReader()
 
-stn = f.read_file("../sample_stns/dc-3.stn")
-# print(dispatch(stn))
-print("########### TESTING FLOYD WARSHALL ###########")
-floyd_warshall(stn)
+stn = f.read_file("../sample_stns/dc-2.stn")
+print(dispatch(stn))
+# print("########### TESTING FLOYD WARSHALL ###########")
+# floyd_warshall(stn)
 
-print(stn)
+# print(stn)
 
 # print("########### TESTING BELLMAN FORD ###########")
 # for i in range(1, 6):
-#     bellman_ford(stn, i)
+#     print(bellman_ford(stn, i))
 #     print(stn)
-#
+
 # print("########### TESTING BELLMAN FORD ###########")
 
 # bellman_ford(stn)
@@ -195,11 +207,11 @@ print(stn)
 #     dijkstra(stn, i)
 #     print(stn)
 #
-print("########### TESTING JOHNSON ###########")
+# print("########### TESTING JOHNSON ###########")
 
-johnson(stn)
+# johnson(stn)
 
-print(stn)
+# print(stn)
 
 # dispatch(stn)
 

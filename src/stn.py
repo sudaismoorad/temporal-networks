@@ -5,9 +5,6 @@
 # =============================
 
 
-import heapq
-
-
 class STN:
     """
     -------------------------------------------------
@@ -19,12 +16,12 @@ class STN:
         A dictionary that maps the name of the node to its index
     names_list : List[Int]
         A list that maps the numerical index of a node to its name
-    successor_edges : List[List[tuples]]
+    successor_edges : List[Dict[index:name]]
         A list of lists of successor edges. The list at index i of this attribute is
         the list of edges of the i-th node. Each edge is represented by a tuple - the
         first element of the tuple is the j-th node that the i-th node is connected to
         and the second element is the weight/distance between the i-th and j-th nodes
-    length : int
+    n : int
         Number of nodes in the STN
     distance_matrix : List[List[int]]
         (optional) if used, holds the NxN all-pairs, shortest-paths (APSP) matrix
@@ -34,7 +31,7 @@ class STN:
     ---------------------------------------------------
     """
 
-    def __init__(self):
+    def __init__(self, successor_edges=True, predecessor_edges=False):
         """
         -----------------------------------------
         Constructor for a Simple Temporal Network
@@ -45,7 +42,7 @@ class STN:
             A dictionary that maps the name of the node to its index
         names_list : List[Int]
             A list that maps the numerical index of a node to its name
-        successor_edges : List[List[tuples]]
+        successor_edges : List[Dictionary]
             A list of lists of successor edges. The list at index i of this attribute is
             the list of edges of the i-th node. Each edge is represented by a tuple - the
             first element of the tuple is the j-th node that the i-th node is connected to
@@ -63,10 +60,13 @@ class STN:
         None
         -----------------------------------------
         """
+        
         self.names_dict = {}
         self.names_list = []
-        self.successor_edges = []
-        self.length = 0
+        self.successor_edges = [] if successor_edges else None
+        self.predecessor_edges = [] if predecessor_edges else None
+        self.n = 0
+        # need a flag for this? Why?
         self.distance_matrix = []
         self.dist_up_to_date = False
 
@@ -79,9 +79,12 @@ class STN:
         ----------------------------------------
         """
         stringy = "STN:\n"
-        stringy += f"Number of nodes in network: {self.length}\n"
+        stringy += f"Number of nodes in network: {self.n}\n"
         stringy += f"Dictionary of names -> index: {self.names_dict}\n"
-        stringy += f"Successor edges of each node: {self.successor_edges}\n"
+        if self.successor_edges:
+            stringy += f"Successor edges of each node: {self.successor_edges}\n"
+        if self.predecessor_edges:
+            stringy += f"Predecessor edges of each node: {self.predecessor_edges}\n"
         # Display the distance_matrix if it is being used
         if self.distance_matrix:
             stringy += f"Distance matrix: {self.distance_matrix}\n"
@@ -89,9 +92,9 @@ class STN:
                 stringy += "Distance matrix might not be up to date"
         return stringy
 
-    # def num_tps(self):
-    #     # should we make the length attribute private?
-    #     return self.n
+    def num_tps(self):
+        # should we make the length attribute private?
+        return self.n
 
     def insert_new_edge(self, tp1, tp2, weight):
         """
@@ -138,7 +141,11 @@ class STN:
         tp1_idx = self.names_dict[tp1] if type(tp1) == str else tp1
         tp2_idx = self.names_dict[tp2] if type(tp2) == str else tp2
 
-        del self.successor_edges[tp1_idx][tp2_idx]
+        if self.successor_edges:
+            del self.successor_edges[tp1_idx][tp2_idx]
+        if self.predecessor_edges:
+            del self.predecessor_edges[tp1_idx][tp2_idx]
+
         self.dist_up_to_date = False
 
     def insert_new_tp(self, tp):
@@ -157,9 +164,9 @@ class STN:
         Inserts the time-point, tp into the STN
         ---------------------------------------------------------
         """
-        self.names_dict[tp] = self.length
-        self.names_list[self.length] = tp
-        self.length += 1
+        self.names_dict[tp] = self.n
+        self.names_list[self.n] = tp
+        self.n += 1
 
     # Discuss whether to keep this or no
     # should we make a generator for traversing through the stn
@@ -171,9 +178,12 @@ class STN:
 
         temp_names_dict = {}
         temp_names_list = []
-        temp_successor_edges = [[] for i in range(len(self.successor_edges))]
+        if self.successor_edges:
+            temp_successor_edges = [[] for i in range(len(self.successor_edges))]
+        if self.predecessor_edges:
+            temp_predecessor_edges = [[] for i in range(len(self.predecessor_edges))]
 
-        for i in range(self.length):
+        for i in range(self.n):
             if i == tp_idx:
                 continue
             node_name = self.names_list[i]
@@ -183,7 +193,10 @@ class STN:
                 if j == tp_idx:
                     continue
                 temp_successor_edges[i].append((j, weight))
+                temp_predecessor_edges[i].append((j, weight))
 
         self.names_list = temp_names_list
         self.names_dict = temp_names_dict
-        self.length -= 1
+        self.successor_edges = temp_successor_edges
+        self.predecessor_edges = temp_predecessor_edges
+        self.n -= 1

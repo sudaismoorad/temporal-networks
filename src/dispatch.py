@@ -2,7 +2,7 @@ from johnson import Johnson
 from bellman_ford import BellmanFord
 from tarjan import Tarjan
 from dijkstra import Dijkstra
-from collections import deque
+from collections import deque, defaultdict
 from copy import deepcopy
 from random import random
 from floyd_warshall import FloydWarshall
@@ -14,9 +14,9 @@ class Dispatch:
     def fast_dipsatch(network):
         # O(N^2 log N) time, O(N) extra space
 
-        distance_matrix = [[] for x in range(network.length)]
+        distance_matrix = [[] for x in range(network.num_tps())]
 
-        potential_function = FloydWarshall.floyd_warshall(network)
+        potential_function = BellmanFord.bellman_ford_wrapper(network)
 
         if not potential_function:
             return False
@@ -25,25 +25,34 @@ class Dispatch:
 
         list_of_leaders = set(min_leaders)
 
-        dict_of_children = {}
+        dict_of_children = defaultdict(list)
 
+        # min_leaders => [0,0,2,3,3]
+        # list_of_leaders => [0,2,3]
+        # dict_of_children => {0:[0,1], 2:[2], 3:[3,4]}
         for idx, i in enumerate(min_leaders):
-            if i in list_of_leaders:
-                if i in dict_of_children:
-                    dict_of_children[i].append(idx)
-                else:
-                    dict_of_children[i] = [idx]
+            #if i in dict_of_children:
+            dict_of_children[i].append(idx)
+            #else:
+            #   dict_of_children[i] = [idx]
 
         for src_idx in list_of_leaders:
-            list_of_distances, predecessor_graph = Dijkstra.dijkstra(
-                network, src_idx, potential_function=potential_function, path=True, list_of_leaders=list_of_leaders)
+            list_of_distances, predecessor_graph = Dijkstra.dijkstra_wrapper(
+                network, src_idx, potential_function=potential_function, path=True, list_of_leaders=dict_of_children[src_idx])
 
-            print(list_of_distances, predecessor_graph)
+            print(list_of_distances)
 
+            for src_idx, distance_list in enumerate(list_of_distances):
+                for successor_idx, weight in enumerate(distance_list):
+                    list_of_distances[src_idx][successor_idx] = weight + \
+                        potential_function[successor_idx] - \
+                        potential_function[src_idx]
+            
             # listy = [path from 3 to 0] = [3, 2, 1, 0]
             for listy in predecessor_graph:
-                print(listy)
-                intersecting_edges = []
+                intersecting_edges = Dispatch._intersecting_edges(src_idx, dict_of_children[src_idx])
+                print(dict_of_children)
+                print(intersecting_edges)
                 # get intersecting edges
                 marked_edges = []
                 for (src_idx, middle_idx), target_idx in intersecting_edges:
@@ -64,6 +73,7 @@ class Dispatch:
                             marked_edges.append((src_idx, target_idx))
                         if D_A == D_C_B:
                             marked_edges.append((src_idx, middle_idx))
+                print(marked_edges)
                 for node_idx, succ_idx in marked_edges:
                     if succ_idx in network.successor_edges[node_idx]:
                         network.delete_edge(node_idx, succ_idx)
@@ -116,18 +126,28 @@ class Dispatch:
 
     @ staticmethod
     def _get_intersecting_edges(network):
-        length = network.length
+        num_tps = network.num_tps()
         intersecting_edges = []
         arr = []
-        for i in range(length):
-            for j in range(length):
+        for i in range(num_tps):
+            for j in range(num_tps):
                 if i == j:
                     continue
-                for k in range(length):
+                for k in range(num_tps):
                     if k == i or k == j:
                         continue
                     if sorted([i, j]) in arr:
                         continue
                     arr.append(sorted([i, j]))
                     intersecting_edges.append(((i, j), k))
+        return intersecting_edges
+
+    @staticmethod
+    def _intersecting_edges(leader, child_array):
+        intersecting_edges = []
+        for i in child_array:
+            for j in child_array:
+                if i == j or i == leader or j == leader:
+                    continue
+                intersecting_edges.append(((leader, i), j))
         return intersecting_edges
