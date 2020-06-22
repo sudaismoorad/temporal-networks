@@ -47,12 +47,17 @@ class Dispatch:
         CONTR_G = STN()
         CONTR_G.n = network.num_tps()
         CONTR_G.successor_edges = []
-        for _ in list_of_leaders:
+        for _ in range(CONTR_G.num_tps()):
             CONTR_G.successor_edges.append({})
         # connecting all rigid components
         for leader_idx in dict_of_children:
             for successor_idx in dict_of_children[leader_idx]:
                 CONTR_G.successor_edges[leader_idx][successor_idx] = network.successor_edges[leader_idx][successor_idx]
+                for successor_idx_2 in dict_of_children[leader_idx]:
+                    if successor_idx == successor_idx_2:
+                        continue
+                    elif successor_idx_2 in network.successor_edges[successor_idx].keys():
+                        CONTR_G.successor_edges[successor_idx][successor_idx_2] = network.successor_edges[successor_idx][successor_idx_2]
         # connecting all leaders to one another
         for leader_idx_1 in dict_of_children:
             for leader_idx_2 in dict_of_children:
@@ -66,37 +71,72 @@ class Dispatch:
 
         distance_matrix = [[] for x in range(len(list_of_leaders))]
         predecessor_graphs = [[] for _ in range(len(list_of_leaders))]
-
+        print(list_of_leaders)
         for src_idx in list_of_leaders:
             distance_matrix[src_idx], predecessor_graphs[src_idx] = Dijkstra.dijkstra_wrapper(
-                CONTR_G, src_idx, potential_function=potential_function, dispatch=True)
-
+                network, src_idx, potential_function=potential_function, dispatch=True, contr_g=CONTR_G)
+            
+            print("PG")
+            print(predecessor_graphs[src_idx])
             for successor_idx, weight in enumerate(distance_matrix[src_idx]):
                 distance_matrix[src_idx][successor_idx] = weight + \
                     potential_function[successor_idx] - \
                     potential_function[src_idx]
 
             marked_edges = []
-
-            for (src_idx, middle_idx), target_idx in intersecting_edges[src_idx]:
-                D_A_B = distance_matrix[src_idx][middle_idx] + \
-                    distance_matrix[middle_idx][target_idx]
-                D_C = distance_matrix[src_idx][target_idx]
-                D_A = distance_matrix[src_idx][middle_idx]
-                D_C_B = distance_matrix[src_idx][target_idx] + \
-                    distance_matrix[target_idx][middle_idx]
-                if D_A_B == D_C and D_A == D_C_B:
-                    if (src_idx, target_idx) not in marked_edges and (src_idx, middle_idx) not in marked_edges:
-                        if random() < 0.5:
-                            marked_edges.append((src_idx, target_idx))
+            print("DM")
+            print(distance_matrix)
+            for successor_idx, weight in CONTR_G.successor_edges[src_idx].items():
+                if weight >= 0:
+                    if src_idx == successor_idx:
+                        continue
+                    for successor_idx_2, weight_2 in CONTR_G.successor_edges[src_idx].items():
+                        if successor_idx_2 == successor_idx or successor_idx_2 == src_idx:
+                            continue
                         else:
-                            marked_edges.append((src_idx, middle_idx))
-                else:
-                    if D_A_B == D_C:
-                        marked_edges.append((src_idx, target_idx))
-                    if D_A == D_C_B:
-                        marked_edges.append((src_idx, middle_idx))
-            print(marked_edges)
+                            print(src_idx)
+                            print(successor_idx)
+                            print(successor_idx_2)
+                            print("------")
+                            if distance_matrix[src_idx][successor_idx_2] <= distance_matrix[src_idx][successor_idx]:
+                                if distance_matrix[src_idx][successor_idx] == distance_matrix[src_idx][successor_idx_2] + network.successor_edges[successor_idx_2][successor_idx]:
+                                    print("yes")
+                                    marked_edges.append((src_idx, successor_idx))
+                elif weight < 0:
+                    if src_idx == successor_idx:
+                        continue
+                    for successor_idx_2, weight_2 in enumerate(distance_matrix[src_idx]):
+                        if successor_idx_2 == successor_idx or successor_idx_2 == src_idx:
+                            continue
+                        else:
+                            print(src_idx)
+                            print(successor_idx)
+                            print(successor_idx_2)
+                            print("------")
+                            if weight_2 < 0 and distance_matrix[src_idx][successor_idx] == distance_matrix[src_idx][successor_idx_2] + network.successor_edges[successor_idx_2][successor_idx]:
+                                print("yes")
+                                marked_edges.append((src_idx, successor_idx))
+
+
+            # for (src_idx, middle_idx), target_idx in intersecting_edges[src_idx]:
+            #     D_A_B = distance_matrix[src_idx][middle_idx] + \
+            #         distance_matrix[middle_idx][target_idx]
+            #     D_C = distance_matrix[src_idx][target_idx]
+            #     D_A = distance_matrix[src_idx][middle_idx]
+            #     D_C_B = distance_matrix[src_idx][target_idx] + \
+            #         distance_matrix[target_idx][middle_idx]
+            #     if D_A_B == D_C and D_A == D_C_B:
+            #         if (src_idx, target_idx) not in marked_edges and (src_idx, middle_idx) not in marked_edges:
+            #             if random() < 0.5:
+            #                 marked_edges.append((src_idx, target_idx))
+            #             else:
+            #                 marked_edges.append((src_idx, middle_idx))
+            #     else:
+            #         if D_A_B == D_C:
+            #             marked_edges.append((src_idx, target_idx))
+            #         if D_A == D_C_B:
+            #             marked_edges.append((src_idx, middle_idx))
+            # print(marked_edges)
             for node_idx, succ_idx in marked_edges:
                 if succ_idx in network.successor_edges[node_idx]:
                     network.delete_edge(node_idx, succ_idx)
@@ -120,7 +160,7 @@ class Dispatch:
         marked_edges = []
 
         intersecting_edges = Dispatch._get_intersecting_edges(network)
-        print(intersecting_edges)
+        # print(intersecting_edges)
         # print(distance_matrix)
         for (src_idx, middle_idx), target_idx in intersecting_edges:
             D_A_B = distance_matrix[src_idx][middle_idx] + \
@@ -140,7 +180,7 @@ class Dispatch:
                     marked_edges.append((src_idx, target_idx))
                 if D_A == D_C_B:
                     marked_edges.append((src_idx, middle_idx))
-        print(marked_edges)
+        # print(marked_edges)
         for node_idx, succ_idx in marked_edges:
             if succ_idx in network.successor_edges[node_idx]:
                 network.delete_edge(node_idx, succ_idx)
