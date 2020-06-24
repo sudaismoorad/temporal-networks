@@ -60,7 +60,7 @@ class STN:
         None
         -----------------------------------------
         """
-        
+
         self.names_dict = {}
         self.names_list = []
         self.successor_edges = [] if successor_edges else None
@@ -165,7 +165,7 @@ class STN:
         ---------------------------------------------------------
         """
         self.names_dict[tp] = self.n
-        self.names_list[self.n] = tp
+        self.names_list.append(tp)
         self.n += 1
 
     # Discuss whether to keep this or no
@@ -179,9 +179,11 @@ class STN:
         temp_names_dict = {}
         temp_names_list = []
         if self.successor_edges:
-            temp_successor_edges = [[] for i in range(len(self.successor_edges))]
+            temp_successor_edges = [[]
+                                    for i in range(len(self.successor_edges))]
         if self.predecessor_edges:
-            temp_predecessor_edges = [[] for i in range(len(self.predecessor_edges))]
+            temp_predecessor_edges = [[]
+                                      for i in range(len(self.predecessor_edges))]
 
         for i in range(self.n):
             if i == tp_idx:

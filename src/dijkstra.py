@@ -208,25 +208,27 @@ class Dijkstra:
         in_queue = {}
         for i in range(contr_g.num_tps()):
             in_queue[i] = False
-        
+
         previous = [None for i in range(contr_g.num_tps())]
-        
 
         heapq.heappush(min_heap, (distances[src_idx], src_idx))
         in_queue[src_idx] = True
 
         while min_heap:
             _, u_idx = heapq.heappop(min_heap)
+            print(u_idx)
             for successor_idx, new_weight in reweighted_edges[u_idx].items():
                 if (distances[u_idx] + new_weight < distances[successor_idx]) and in_queue[successor_idx] == False:
                     print(u_idx, successor_idx)
                     distances[successor_idx] = new_weight + distances[u_idx]
                     previous[successor_idx] = u_idx
-                    heapq.heappush(min_heap, (distances[successor_idx], successor_idx))
+                    heapq.heappush(
+                        min_heap, (distances[successor_idx], successor_idx))
                     in_queue[successor_idx] = True
 
         predecessor_graph = []
-        # _, u_idx = heapq.heappop(min_heap)
+        print(previous)
+
         predecessor_graph.append(u_idx)
         while previous[u_idx] != src_idx:
             u_idx = previous[u_idx]
@@ -234,62 +236,25 @@ class Dijkstra:
         predecessor_graph.append(src_idx)
         return distances, predecessor_graph
 
-        # num_tps = network.num_tps()
-        # predecessor_graphs = [[] for i in list_of_leaders]
-        # list_of_distances = [[float("inf") for j in list_of_leaders] for i in list_of_leaders]
-        # for idx in range(len(list_of_distances)):
-        #     list_of_distances[idx][idx] = 0
-        # print(list_of_distances)
-        # for idx, leader in enumerate(list_of_leaders):
-        #     if leader == src_idx:
-        #         continue
-        #     reweighted_edges = deepcopy(network.successor_edges)
+    @staticmethod
+    def dijkstra_(network, listy, src_idx):
 
-        #     for node_idx, dict_of_edges in enumerate(reweighted_edges):
-        #         # do we not need tuple_idx?
-        #         for _, (successor_idx, weight) in enumerate(dict_of_edges.items()):
-        #             reweighted_edges[node_idx][successor_idx] = weight + \
-        #                 potential_function[node_idx] - \
-        #                 potential_function[successor_idx]
+        distances = [float("inf") for i in range(len(listy))]
+        distances[src_idx] = 0
 
-        #     min_heap = []
-        #     in_queue = {}
-        #     previous = ["" for i in range(network.num_tps())]
+        min_heap = []
+        heapq.heappush(min_heap, (distances[src_idx], src_idx))
 
-        #     heapq.heappush(min_heap, (distances[src_idx], src_idx))
-        #     in_queue[src_idx] = True
+        while min_heap:
 
-        #     while min_heap:
-        #         _, u_idx = heapq.heappop(min_heap)
+            _, u_idx = heapq.heappop(min_heap)
+            for successor_idx, weight in network.successor_edges[u_idx].items():
+                if successor_idx in listy:
+                    print(distances[u_idx])
+                    print(successor_idx)
+                    if (distances[u_idx] + weight < distances[successor_idx]):
+                        distances[successor_idx] = distances[u_idx] + weight
+                        heapq.heappush(
+                            min_heap, (distances[successor_idx], successor_idx))
 
-        #         if leader == u_idx:
-        #             rtn = []
-        #             rtn.append(u_idx)
-        #             while previous[u_idx] != src_idx:
-        #                 u_idx = previous[u_idx]
-        #                 rtn.append(u_idx)
-        #             rtn.append(src_idx)
-        #             predecessor_graphs[idx] = rtn
-        #             list_of_distances[idx] = distances
-        #             break
-
-        #         for successor_idx, new_weight in reweighted_edges[u_idx].items():
-
-        #             # new_weight = weight + \
-        #             #     potential_function[successor_idx] - \
-        #             #     potential_function[u_idx]
-
-        #    if successor_idx not in in_queue:
-        #         heapq.heappush(min_heap, (new_weight, successor_idx))
-        #         previous[successor_idx] = u_idx
-        #         in_queue[successor_idx] = True
-        #     else:
-        #         if (new_weight < distances[successor_idx]):
-
-        #             distances[successor_idx] = new_weight
-        #             heapq.heappush(
-        #                 min_heap, (distances[successor_idx], successor_idx))
-        #             previous[successor_idx] = u_idx
-        #             in_queue[successor_idx] = True
-
-        # return list_of_distances, predecessor_graphs
+        return distances

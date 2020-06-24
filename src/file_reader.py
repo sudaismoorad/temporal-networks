@@ -61,7 +61,8 @@ class FileReader:
                     raise Exception("Invalid Network Type")
 
     def _read_stn(self, file):
-        network = STN(successor_edges=self.successor_edges, predecessor_edges=self.predecessor_edges)
+        network = STN(successor_edges=self.successor_edges,
+                      predecessor_edges=self.predecessor_edges)
         state = ""
         for line in file:
             if line.startswith('#'):
@@ -116,9 +117,10 @@ class FileReader:
                     idx_successor = network.names_dict[weights[2]]
                     if self.successor_edges:
                         network.successor_edges[idx_node][idx_successor] = int(
-                        weights[1])
+                            weights[1])
                     if self.predecessor_edges:
-                        network.predecessor_edges[idx_successor][idx_node] = int(weights[1])
+                        network.predecessor_edges[idx_successor][idx_node] = int(
+                            weights[1])
                 elif state == 'LINKS':
                     raise Exception(
                         "Simple Temporal Networks do not have contingent links.")
@@ -183,7 +185,7 @@ class FileReader:
 
 f = FileReader()
 
-stn = f.read_file("../sample_stns/dc-2.stn")
+stn = f.read_file("../sample_stns/dc-3.stn")
 print(dispatch(stn))
 # print("########### TESTING FLOYD WARSHALL ###########")
 # floyd_warshall(stn)
