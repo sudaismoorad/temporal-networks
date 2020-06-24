@@ -186,7 +186,7 @@ class FileReader:
 f = FileReader()
 
 stn = f.read_file("../sample_stns/dc-3.stn")
-print(dispatch(stn))
+# print(dispatch(stn))
 # print("########### TESTING FLOYD WARSHALL ###########")
 # floyd_warshall(stn)
 
@@ -202,6 +202,7 @@ print(dispatch(stn))
 # bellman_ford(stn)
 
 # print(stn)
+
 
 # print("########### TESTING DIJKSTRA ###########")
 #

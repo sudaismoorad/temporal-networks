@@ -38,7 +38,12 @@ class Dispatch:
                 dict_of_children[i] = [i]
 
         num_tps = network.num_tps()
-
+        print(f"Network: {network}")
+        CONTR_G = STN()
+        CONTR_G.n = network.num_tps()
+        CONTR_G.names_list = network.names_list
+        CONTR_G.names_dict = network.names_dict
+        CONTR_G.successor_edges = [{} for i in range(CONTR_G.num_tps())]
         # removing all edges from inside an RC to nodes outside it
         # and then adding an edge from the leader to the node outside
         for i in range(num_tps):
@@ -47,25 +52,39 @@ class Dispatch:
                 if j not in dict_of_children[leader] and leader != j:
                     weight = network.successor_edges[i][leader] + \
                         network.successor_edges[leader][j]
-                    network.insert_new_edge(leader, j, weight)
-                    network.delete_edge(i, j)
-
+                    CONTR_G.insert_new_edge(leader, j, weight)
+        print(f"Network: {network}")
         # now making a doubly linked list inside the RC
         for leader in list_of_leaders:
             # dict_of_children[leader] would give us the RC
             # run dijksra on this to find the shortest path
             RC_distances = Dijkstra.dijkstra_(
                 network, dict_of_children[leader], leader)
-            print(RC_distances)
+            
+            RC_order = []
+            for idx, distance in enumerate(RC_distances):
+                RC_order.append((distance, idx))
+            RC_order.sort()
+            print(RC_order)
+            for i in range(len(RC_order)):
+                length = len(RC_order)
+                j = (i + 1) % length
+                print(j)
+                weight = RC_order[j][0] - RC_order[i][0]
+                node_1 = RC_order[i][1]
+                node_2 = RC_order[j][1]
+                CONTR_G.insert_new_edge(node_1, node_2, weight)
+                CONTR_G.insert_new_edge(node_2, node_1, -weight)
+            print("RC_distances", RC_order)
 
-        print(f"Network: {network}")
+        print(f"CONTR_G: {CONTR_G}")
 
         distance_matrix = [[] for x in range(len(list_of_leaders))]
         predecessor_graphs = [[] for _ in range(len(list_of_leaders))]
 
         for src_idx in list_of_leaders:
             distance_matrix[src_idx], predecessor_graphs[src_idx] = Dijkstra.dijkstra_wrapper(
-                network, src_idx, potential_function=potential_function, dispatch=True, contr_g=network)
+                network, src_idx, potential_function=potential_function, dispatch=True, contr_g=CONTR_G)
 
             for successor_idx, weight in enumerate(distance_matrix[src_idx]):
                 distance_matrix[src_idx][successor_idx] = weight + \

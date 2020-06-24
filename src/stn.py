@@ -202,3 +202,22 @@ class STN:
         self.successor_edges = temp_successor_edges
         self.predecessor_edges = temp_predecessor_edges
         self.n -= 1
+
+    def check_solution(self, distances):
+        """
+        -----------------------------------------------------------------
+        Method to check whether a solution works on the target STN or not
+        ------------------------------------------------------------------
+        Input:
+            stn, the target STN
+            distances, a list of integers representing the time at which each index is executed
+
+        Output:
+            works, a boolean that is true if the solution is valid and false otherwise.
+
+        """
+        for node_idx, distance in enumerate(distances):
+            for successor_idx, edge_weight in self.successor_edges[node_idx].items():
+                if distances[successor_idx] - distance > edge_weight:
+                    return False
+        return True
