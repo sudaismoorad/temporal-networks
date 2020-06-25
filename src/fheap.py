@@ -11,10 +11,7 @@ def heappop(heap):
 
 
 def heapify(item):
-    heap = FHeap()
-    if item:
-        heap.heapify(item)
-    return heap
+    pass
 
 
 def heapreplace():
@@ -46,30 +43,17 @@ class Node:
         self.degree = 0
 
     def add_child(self, node):
-        # if the node does not have a child
         if not self.child:
-            # make the child the node you entered
             self.child = node
-            # set left and right pointers of node to node itself
             node.lsibling, node.rsibling = node, node
         else:
-            # get the node that is to the right of the child
-            right_to_child = self.child.rsibling
-            # set the current node to be right of the child
+            right_of_child = self.child.rsibling
             self.child.rsibling = node
-            # update the current child to be the left sibling
-            # of the current node
             node.lsibling = self.child
-            # set the right sibling to be the node that was to
-            # the right of the child
-            node.rsibling = right_to_child
-            # what is this doing?
-            right_to_child.lsibling = node
-        # make the current node the parent of the node to be added
+            node.rsibling = right_of_child
+            right_of_child.lsibling = node
         node.parent = self
-        # increase the degree of the current node
         self.degree += 1
-        # reset the mark to be False
         self.mark = False
 
     def remove_child(self, node):
@@ -84,6 +68,7 @@ class Node:
             left_to_node, right_to_node = node.lsibling, node.rsibling
             left_to_node.rsibling = right_to_node
             right_to_node.lsibling = left_to_node
+
         self.degree -= 1
 
 
@@ -102,38 +87,117 @@ class FHeap:
     def heapify(self, item):
         pass
 
+    def remove_root(self, node):
+        right_of_node, left_of_node = node.lsibling, node.rsibling
+        right_of_node.lsibling = left_of_node
+        left_of_node.rsibling = right_of_node
+
+        self.num_trees -= 1
+
     def add_root(self, node):
-        pass
+        if self.min is None:
+            node.lsibling, node.rsibling = node, node
+        else:
+            right_of_min = self.min.rsibling
+            self.min.rsibling = node
+            node.lsibling = self.min
+            node.rsibling = right_of_min
+            right_of_min.lsibling = node
+
+        self.num_trees -= 1
 
     def remove_child(self, node):
         pass
 
     def heappush(self, node):
-        pass
+        self.add_root(node)
+
+        if self.min is None or node.key < self.min.key:
+            self.min = node
+
+        self.num_nodes += 1
 
     def heappeek(self):
         return self.min
 
     def heappop(self):
-        pass
+        rtn = self.min
+        if rtn is not None:
+            node = rtn.child
+            for _ in range(rtn.degree):
+                succ_node = node.rsibling
+                self.add_root(node)
+                node.parent = None
+                node = succ_node
+
+            if rtn.mark:
+                self.num_marks -= 1
+            self.remove_root(rtn)
+
+            if rtn == rtn.rsibling:
+                self.min = None
+            else:
+                self.min = rtn.rsibling
+                self.consolidate()
+
+        return rtn
 
     def consolidate(self):
         pass
 
     def link(self, n1, n2):
-        pass
+        self.remove_root(n1)
+        if n1.mark:
+            self.num_marks -= 1
+        n2.add_child(n1)
 
     def union(self, other):
-        pass
+        if self.min is None:
+            self.min = other.min
+        elif other.min:
+            self_first_root, other_last_root = self.min.lsibling, other.min.rsibling
+            self_first_root.lsibling = other_last_root
+            self.min.rsibling = other.min
+            other.min.lsibling = self.min
+            other_last_root.rsibling = self_first_root
 
-    def decrease_key(self, x, k):
-        pass
+        if self.min is None or (other.min is not None and other.min.key < self.min.key):
+            self.min = other.min
 
-    def cut(self, x, y):
-        pass
+        self.num_nodes += other.num_nodes
+        self.num_trees += other.num_trees
+        self.num_marks += other.num_marks
 
-    def cascading_cut(self, y):
-        pass
+    def decrease_key(self, node, key):
+        if key > node.key:
+            raise ValueError("New key is greater than second key")
+        node.key = key
+        parent = node.parent
+
+        if parent and node.key < parent.key:
+            self.cut(node, parent)
+            self.cascading_cut(parent)
+
+        if node.key < self.min.key:
+            self.min = node
+
+    def cut(self, node, node_parent):
+        if node.mark:
+            self.num_marks -= 1
+            node.mark = False
+        node_parent.remove_child(node)
+        self.add_root(node)
+        node.parent = None
+
+    def cascading_cut(self, node):
+        node_parent = node.parent
+        if node_parent:
+            if not node.mark:
+                node.mark = True
+                self.num_marks += 1
+            else:
+                self.cut(node, node_parent)
+                self.cascading_cut(node_parent)
 
     def delete(self, x):
         pass
