@@ -16,7 +16,7 @@ class Dijkstra:
     # How to deal with predecessor edges attribute? Does pred_dijkstra run when predecessor edges given or it always calculates them?
 
     @staticmethod
-    def dijkstra_wrapper(network, src, succ_direction=True, potential_function=False, path=False, dispatch=False, contr_g=None):
+    def dijkstra_wrapper(network, src, succ_direction=True, potential_function=False, path=False, dispatch=False):
         """
         A static method that calls one of the variants of Dikstra's algorithm
         depending on the inputs given.
@@ -49,9 +49,9 @@ class Dijkstra:
         distances[src_idx] = 0
 
         if dispatch:
-            if network.successor_edges is None and contr_g is None:
+            if network.successor_edges is None:
                 return False
-            return Dijkstra._dispatch_dijkstra(network, src_idx, distances, potential_function, contr_g)
+            return Dijkstra._dispatch_dijkstra(network, src_idx, distances)
 
         if not potential_function:
             if succ_direction:
@@ -196,20 +196,14 @@ class Dijkstra:
         return distances
 
     @staticmethod
-    def _dispatch_dijkstra(network, src_idx, distances, potential_function, contr_g):
-        reweighted_edges = deepcopy(contr_g.successor_edges)
-        for node_idx, dict_of_edges in enumerate(reweighted_edges):
-            for _, (successor_idx, weight) in enumerate(dict_of_edges.items()):
-                reweighted_edges[node_idx][successor_idx] = weight + \
-                    potential_function[node_idx] - \
-                    potential_function[successor_idx]
+    def _dispatch_dijkstra(network, src_idx, distances):
 
         min_heap = []
         in_queue = {}
-        for i in range(contr_g.num_tps()):
+        for i in range(network.num_tps()):
             in_queue[i] = False
 
-        previous = [None for i in range(contr_g.num_tps())]
+        previous = [None for i in range(network.num_tps())]
 
         heapq.heappush(min_heap, (distances[src_idx], src_idx))
         in_queue[src_idx] = True
@@ -217,7 +211,7 @@ class Dijkstra:
         while min_heap:
             _, u_idx = heapq.heappop(min_heap)
             print(u_idx)
-            for successor_idx, new_weight in reweighted_edges[u_idx].items():
+            for successor_idx, new_weight in network.successor_edges[u_idx].items():
                 if (distances[u_idx] + new_weight < distances[successor_idx]) and in_queue[successor_idx] == False:
                     print(u_idx, successor_idx)
                     distances[successor_idx] = new_weight + distances[u_idx]

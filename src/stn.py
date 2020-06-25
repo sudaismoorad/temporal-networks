@@ -117,7 +117,10 @@ class STN:
         tp1_idx = self.names_dict[tp1] if type(tp1) == str else tp1
         tp2_idx = self.names_dict[tp2] if type(tp2) == str else tp2
 
-        self.successor_edges[tp1_idx][tp2_idx] = int(weight)
+        if self.successor_edges is not None:
+            self.successor_edges[tp1_idx][tp2_idx] = int(weight)
+        if self.predecessor_edges is not None:
+            self.predecessor_edges[tp2_idx][tp1_idx] = int(weight)
         self.dist_up_to_date = False
 
     def delete_edge(self, tp1, tp2):
@@ -179,10 +182,10 @@ class STN:
         temp_names_dict = {}
         temp_names_list = []
         if self.successor_edges:
-            temp_successor_edges = [[]
+            temp_successor_edges = [{}
                                     for i in range(len(self.successor_edges))]
         if self.predecessor_edges:
-            temp_predecessor_edges = [[]
+            temp_predecessor_edges = [{}
                                       for i in range(len(self.predecessor_edges))]
 
         for i in range(self.n):
@@ -191,16 +194,20 @@ class STN:
             node_name = self.names_list[i]
             temp_names_dict[node_name] = i
             temp_names_list.append(node_name)
-            for j, weight in self.successor_edges[i]:
+            for j, weight in self.successor_edges[i].items():
                 if j == tp_idx:
                     continue
-                temp_successor_edges[i].append((j, weight))
-                temp_predecessor_edges[i].append((j, weight))
+                if self.successor_edges:
+                    temp_successor_edges[i][j] = weight
+                if self.predecessor_edges:
+                    temp_predecessor_edges[j][i] = weight
 
         self.names_list = temp_names_list
         self.names_dict = temp_names_dict
-        self.successor_edges = temp_successor_edges
-        self.predecessor_edges = temp_predecessor_edges
+        if self.successor_edges:
+            self.successor_edges = temp_successor_edges
+        if self.predecessor_edges:
+            self.predecessor_edges = temp_predecessor_edges
         self.n -= 1
 
     def check_solution(self, distances):
@@ -221,3 +228,11 @@ class STN:
                 if distances[successor_idx] - distance > edge_weight:
                     return False
         return True
+
+    def populate_predecessor_edges(self):
+        if self.predecessor_edges is not None:
+            return
+        self.predecessor_edges = [{} for _ in range(self.n)]
+        for node_idx, edge_dict in enumerate(self.successor_edges):
+            for successor_idx, weight in edge_dict.items():
+                self.predecessor_edges[successor_idx][node_idx] = weight 

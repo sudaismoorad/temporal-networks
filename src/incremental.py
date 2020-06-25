@@ -18,8 +18,10 @@ class Incremental:
                 new_key = potential_function[node_idx] - updated_potential_function[node_idx]
                 if in_queue[node_idx] == NOT_YET_IN_QUEUE:
                     heapq.heappush(min_heap, (node_idx, new_key))
-                elif n_queue[node_idx] == IN_QUEUE:
+                    in_queue[node_idx] = IN_QUEUE
+                elif in_queue[node_idx] == IN_QUEUE:
                     decrease_key(min_heap, node_idx, new_key)
+                    in_queue[node_idx] = POPPED_OFF
                 else:
                     return False
             return True
