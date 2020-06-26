@@ -14,11 +14,65 @@ class Dispatch:
     @staticmethod
     def fast_dispatch(network):
         # O(N^2 log N) time, O(N) extra space
+        potential_function = BellmanFord.bellman_ford_wrapper(network)
+        if not potential_function:
+            return False
+
+        if not network.predecessor_edges:
+            network.populate_predecessor_edges()
+
+        network_num_tps = network.num_tps()
+        distance_matrix = [[] for _ in range(network_num_tps)]
+
+        rigid_components = Dispatch._tarjan(network)
+
+        temp_rigid_components = [[] for i in range(len(rigid_components))]
+        for idx, rigid_component in enumerate(rigid_components):
+            for node in rigid_component:
+                temp_rigid_components[idx].append(
+                    (potential_function[node], node))
+            temp_rigid_components[idx].sort()
+        rigid_components = []
+        for i in range(len(temp_rigid_components)):
+            rigid_components.append([])
+            for j in range(len(temp_rigid_components[i])):
+                rigid_components[i].append(temp_rigid_components[i][j][1])
+
+        list_of_leaders = []
+        for i in range(len(rigid_components)):
+            list_of_leaders.append(rigid_components[i][0])
+
+        CONTR_G_EDGES = []
+        for rigid_component in rigid_components:
+            for i in range(len(rigid_component) - 1):
+                j = i + 1
+                n1 = rigid_component[i]
+                n2 = rigid_component[j]
+                # weight..... do we need reweighted edges for this???
+                weight = network.successor_edges[n1][n2] + \
+                    potential_function[n1] - potential_function[n2]
+                CONTR_G_EDGES.append((n1, n2, weight))
+        print(CONTR_G_EDGES)
+
+        CONTR_G = STN()
+        for i in list_of_leaders:
+            CONTR_G.insert_new_tp(i)
+        print(CONTR_G)
+
+        for node_idx, edge_dict in enumerate(network.successor_edges):
+            for successor_idx, weight in edge_dict:
+                if node_idx not in list_of_leaders:
+                    pass
+
+    @staticmethod
+    def old_fast_dispatch(network):
+        # O(N^2 log N) time, O(N) extra space
 
         potential_function = BellmanFord.bellman_ford_wrapper(network)
         if not potential_function:
             return False
         else:
+            # \hat{w}, not network.successor_edges -- use this in dijkstra as well
             for node_idx, dict_of_edges in enumerate(network.successor_edges):
                 for _, (successor_idx, weight) in enumerate(dict_of_edges.items()):
                     network.successor_edges[node_idx][successor_idx] = weight + \
@@ -30,8 +84,10 @@ class Dispatch:
         distance_matrix = [[] for x in range(network.num_tps())]
 
         rigid_components = Dispatch._tarjan(network)
+        # rigid_components = [0, 0, 2, 3, 3, 3]
 
         list_of_leaders = set(rigid_components)
+        # list_of_leaders = [0, 2, 3]
 
         dict_of_children = {}
 

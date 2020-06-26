@@ -21,7 +21,15 @@ class Tarjan:
             if self.ids[i] == -1:
                 self._dfs(i)
 
-        return self.low
+        # self.low = [0, 0, 2, 3, 3]
+
+        rigid_components = [[] for i in range(len(set(self.low)))]
+        for idx, rc in enumerate(self.low):
+            rigid_components[rc].append(idx)
+
+        # rigid_components = [[0, 1], [2], [3, 4]]
+
+        return rigid_components
 
     def _dfs(self, idx):
         self.stack.append(idx)
@@ -30,7 +38,6 @@ class Tarjan:
         self.low[idx] = idx
         self.id += 1
 
-        # for target_idx in self.graph[idx]:
         for target_idx in self.network.successor_edges[idx]:
             if self.ids[target_idx] == -1:
                 self._dfs(target_idx)
