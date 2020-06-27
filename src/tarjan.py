@@ -20,7 +20,6 @@ class Tarjan:
         for i in range(self.num_tps):
             if self.ids[i] == -1:
                 self._dfs(i)
-
         # self.low = [0, 0, 2, 3, 3]
 
         rigid_components = [[] for i in range(len(set(self.low)))]

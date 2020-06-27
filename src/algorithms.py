@@ -19,7 +19,7 @@ def bellman_ford(network, src=-1):
 
 
 def dijkstra(network, src, succ_direction=True, potential_function=False):
-    return Dijkstra.dijkstra(network, src, succ_direction, potential_function)
+    return Dijkstra.dijkstra_wrapper(network, src, succ_direction, potential_function)
 
 
 def johnson(network):

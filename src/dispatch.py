@@ -46,8 +46,6 @@ class Dispatch:
         for rigid_component in rigid_components:
             for node_idx in rigid_component:
                 node_to_leader_map[node_idx] = rigid_component[0]
-        
-        print(node_to_leader_map)
 
         CONTR_G_EDGES = []
         for rigid_component in rigid_components:
@@ -55,22 +53,25 @@ class Dispatch:
                 j = i + 1
                 n1 = rigid_component[i]
                 n2 = rigid_component[j]
-                # weight..... do we need reweighted edges for this???
-                weight = network.successor_edges[n1][n2] + \
-                    potential_function[n1] - potential_function[n2]
+
+                try:
+                    weight = network.successor_edges[n1][n2]
+                except:
+                    bf = BellmanFord.bellman_ford_wrapper(network, n1)
+                    weight = bf[n2]
+
+                weight += potential_function[n1] - potential_function[n2]
+
                 CONTR_G_EDGES.append((n1, n2, weight))
-        print(CONTR_G_EDGES)
 
         CONTR_G = STN()
         for i in list_of_leaders:
             CONTR_G.insert_new_tp(str(i))
 
-
         for node_idx in range(len(list_of_leaders)):
             CONTR_G.successor_edges.append({})
             CONTR_G.insert_new_edge(node_idx, node_idx, 0)
-        
-        
+
         def reweight_edge(n1, n2):
             try:
                 new_weight = network.successor_edges[n1][n2] + \
@@ -78,28 +79,28 @@ class Dispatch:
             except:
                 new_weight = float("inf")
             return new_weight
-        
-        
+
         for node_idx, edge_dict in enumerate(network.successor_edges):
             for successor_idx, weight in edge_dict.items():
                 if node_idx not in list_of_leaders:
                     n1 = node_to_leader_map[node_idx]
                     n2 = node_to_leader_map[successor_idx]
-                    weight = reweight_edge(n1, node_idx) + reweight_edge(node_idx, successor_idx) + reweight_edge(successor_idx, n2)
+                    weight = reweight_edge(
+                        n1, node_idx) + reweight_edge(node_idx, successor_idx) + reweight_edge(successor_idx, n2)
                     if weight != float("inf") and n1 != n2:
                         if n1 in CONTR_G.successor_edges and n2 in CONTR_G.successor_edges[n1]:
                             if CONTR_G.successor_edges[n1][n2] > weight:
                                 CONTR_G.successor_edges[n1][n2] = weight
                         else:
                             CONTR_G.insert_new_edge(n1, n2, weight)
-        
+
         distance_matrix = [[] for x in range(len(list_of_leaders))]
         predecessor_graphs = [[] for _ in range(len(list_of_leaders))]
 
         for leader_idx, leader in enumerate(list_of_leaders):
             distance_matrix[leader_idx], predecessor_graphs[leader_idx] = Dijkstra.dijkstra_wrapper(
                 CONTR_G, str(leader), dispatch=True)
-            
+
             marked_edges = []
 
             for successor_idx, weight in CONTR_G.successor_edges[leader_idx].items():
@@ -123,7 +124,8 @@ class Dispatch:
                             continue
                         else:
                             if weight_2 < 0 and successor_idx_2 in predecessor_graphs[leader_idx] and successor_idx in predecessor_graphs[leader_idx] and predecessor_graphs[leader_idx].index(successor_idx) < predecessor_graphs[leader_idx].index(successor_idx_2):
-                                marked_edges.append((leader_idx, successor_idx))
+                                marked_edges.append(
+                                    (leader_idx, successor_idx))
 
             for leader_idx, succ_idx in marked_edges:
                 if succ_idx in CONTR_G.successor_edges[leader_idx]:
@@ -139,14 +141,14 @@ class Dispatch:
                 if node_idx == successor_idx:
                     continue
                 else:
-                    DISPATCHABLE_STN.insert_new_edge(node_idx, successor_idx, weight)
-        
+                    DISPATCHABLE_STN.insert_new_edge(
+                        node_idx, successor_idx, weight)
+
         for node_idx, successor_idx, weight in CONTR_G_EDGES:
             DISPATCHABLE_STN.insert_new_edge(node_idx, successor_idx, weight)
             DISPATCHABLE_STN.insert_new_edge(successor_idx, node_idx, -weight)
 
         return DISPATCHABLE_STN
-
 
     @ staticmethod
     def _tarjan(network):
@@ -209,7 +211,7 @@ class Dispatch:
                     intersecting_edges.append(((i, j), k))
         return intersecting_edges
 
-    @staticmethod
+    @ staticmethod
     def _intersecting_edges(leader, child_array):
         intersecting_edges = []
         for i in child_array:

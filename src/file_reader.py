@@ -187,8 +187,9 @@ class FileReader:
 f = FileReader()
 
 stn = f.read_file("../sample_stns/dc-2.stn")
-# please = dispatch(stn)
-print(Dispatchability.greedy_execute(stn, 0))
+dispatched_graph = dispatch(stn)
+print(dispatched_graph)
+print(Dispatchability.greedy_execute(dispatched_graph, 0))
 
 
 # print("########### TESTING FLOYD WARSHALL ###########")
