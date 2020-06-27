@@ -158,7 +158,7 @@ class STN:
         ----------------------------------------------
         Parameters:
         -----------
-        tp, either a numerical index or the name of a time-point
+        tp, the name of a time-point
         -----------
         Returns:  none
         -----------

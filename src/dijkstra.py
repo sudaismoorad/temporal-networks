@@ -207,12 +207,14 @@ class Dijkstra:
 
         heapq.heappush(min_heap, (distances[src_idx], src_idx))
         in_queue[src_idx] = True
+        counter = 0
 
         while min_heap:
             _, u_idx = heapq.heappop(min_heap)
-
+            print(u_idx, network.successor_edges)
             for successor_idx, new_weight in network.successor_edges[u_idx].items():
                 if (distances[u_idx] + new_weight < distances[successor_idx]) and in_queue[successor_idx] == False:
+                    counter += 1
                     distances[successor_idx] = new_weight + distances[u_idx]
                     previous[successor_idx] = u_idx
                     heapq.heappush(
@@ -222,6 +224,8 @@ class Dijkstra:
         predecessor_graph = []
 
         predecessor_graph.append(u_idx)
+        if counter == 0:
+            return False, False
         while previous[u_idx] != src_idx:
             u_idx = previous[u_idx]
             predecessor_graph.append(u_idx)

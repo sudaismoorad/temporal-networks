@@ -2,6 +2,7 @@ from stn import STN
 from stnu import STNU
 from algorithms import *
 from random_stn import RandomSTN
+from dispatchability import Dispatchability
 
 
 class FileReader:
@@ -186,7 +187,10 @@ class FileReader:
 f = FileReader()
 
 stn = f.read_file("../sample_stns/dc-2.stn")
-print(dispatch(stn))
+# please = dispatch(stn)
+print(Dispatchability.greedy_execute(stn, 0))
+
+
 # print("########### TESTING FLOYD WARSHALL ###########")
 # floyd_warshall(stn)
 
