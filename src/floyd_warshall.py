@@ -63,8 +63,7 @@ class FloydWarshall:
             if distance_matrix[node_idx][node_idx] < 0:
                 return False
 
-        if network.dist_up_to_date:
-            network.dist_up_to_date = False
+        network.dist_up_to_date = True
 
         network.distance_matrix = distance_matrix
         return distance_matrix

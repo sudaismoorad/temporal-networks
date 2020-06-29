@@ -37,8 +37,7 @@ class Johnson:
                     potential_function[successor_idx] - \
                     potential_function[src_idx]
 
-        if network.dist_up_to_date:
-            network.dist_up_to_date = False
+        network.dist_up_to_date = True
 
         network.distance_matrix = distance_matrix
         return distance_matrix
