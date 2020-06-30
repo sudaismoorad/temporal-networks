@@ -38,7 +38,7 @@ class Dijkstra:
             A list representing the shortest distances between the src and all
             the nodes.
         """
-        
+
         if type(src) == str:
             src_idx = network.names_dict[src]
         else:
@@ -222,20 +222,11 @@ class Dijkstra:
         predecessor_graph = []
 
         predecessor_graph.append(u_idx)
+
         if counter == 0:
             return False, False
-        predecessor_graphs = []
-        for idx in range(len(distances)):
-            print(idx)
-            i = idx
-            if i != src_idx:
-                while previous[i] != src_idx:
-                    i = previous[i]
-                    predecessor_graph.append(i)
-                predecessor_graph.append(src_idx)
-                predecessor_graphs.append(predecessor_graph)
-        print("previous", previous)
-        return distances, predecessor_graphs
+
+        return distances, previous
 
     @staticmethod
     def dijkstra_(network, listy, src_idx):
