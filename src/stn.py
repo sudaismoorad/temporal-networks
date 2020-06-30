@@ -147,7 +147,7 @@ class STN:
         if self.successor_edges:
             del self.successor_edges[tp1_idx][tp2_idx]
         if self.predecessor_edges:
-            del self.predecessor_edges[tp1_idx][tp2_idx]
+            del self.predecessor_edges[tp2_idx][tp1_idx]
 
         self.dist_up_to_date = False
 

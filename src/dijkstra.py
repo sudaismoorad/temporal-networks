@@ -25,8 +25,7 @@ class Dijkstra:
         network: STN, STNU
             The simple temporal network the algorithm will be run on.
         src: int, str
-            An integer or string representing the index / name of a node. If
-            not given the default is -1.
+            An integer or string representing the index / name of a node. 
         succ_direction: bool
             If true succesor edge variant runs, if false predecessor edge
             variant runs. Default value is true.
@@ -39,7 +38,7 @@ class Dijkstra:
             A list representing the shortest distances between the src and all
             the nodes.
         """
-
+        
         if type(src) == str:
             src_idx = network.names_dict[src]
         else:
@@ -211,7 +210,6 @@ class Dijkstra:
 
         while min_heap:
             _, u_idx = heapq.heappop(min_heap)
-            print(u_idx, network.successor_edges)
             for successor_idx, new_weight in network.successor_edges[u_idx].items():
                 if (distances[u_idx] + new_weight < distances[successor_idx]) and in_queue[successor_idx] == False:
                     counter += 1
@@ -226,11 +224,18 @@ class Dijkstra:
         predecessor_graph.append(u_idx)
         if counter == 0:
             return False, False
-        while previous[u_idx] != src_idx:
-            u_idx = previous[u_idx]
-            predecessor_graph.append(u_idx)
-        predecessor_graph.append(src_idx)
-        return distances, predecessor_graph
+        predecessor_graphs = []
+        for idx in range(len(distances)):
+            print(idx)
+            i = idx
+            if i != src_idx:
+                while previous[i] != src_idx:
+                    i = previous[i]
+                    predecessor_graph.append(i)
+                predecessor_graph.append(src_idx)
+                predecessor_graphs.append(predecessor_graph)
+        print("previous", previous)
+        return distances, predecessor_graphs
 
     @staticmethod
     def dijkstra_(network, listy, src_idx):
