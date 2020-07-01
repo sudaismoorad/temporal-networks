@@ -13,7 +13,7 @@ import heapq
 class Dispatch:
 
     @staticmethod
-    def last_ride(network):
+    def fast_dispatch(network):
         # O(N^2 log N) time, O(N) extra space
         potential_function = BellmanFord.bellman_ford_wrapper(network)
 
@@ -74,8 +74,6 @@ class Dispatch:
                     bf = BellmanFord.bellman_ford_wrapper(network, n1)
                     weight = bf[n2]
 
-                weight += potential_function[n1] - potential_function[n2]
-
                 CONTR_G_EDGES.append((n1, n2, weight))
 
         CONTR_G = STN()
@@ -91,52 +89,69 @@ class Dispatch:
                     if successor_idx in CONTR_G.successor_edges[node_idx]:
                         if CONTR_G.successor_edges[node_idx][successor_idx] < network.successor_edges[node_idx][successor_idx]:
                             continue
+                    weight = network.successor_edges[node_idx][successor_idx]
+                    # weight = reweight_edge(node_idx, successor_idx)
                     CONTR_G.insert_new_edge(
-                        node_idx, successor_idx, network.successor_edges[node_idx][successor_idx])
+                        node_idx, successor_idx, weight)
                 except:
                     pass
+
+        for node_idx, edge_dict in enumerate(network.successor_edges):
+            for successor_idx, weight in edge_dict.items():
+                if node_idx not in list_of_leaders:
+                    n1 = node_to_leader_map[node_idx]
+                    n2 = node_to_leader_map[successor_idx]
+                    weight = network.successor_edges[n1][node_idx] + \
+                        network.successor_edges[node_idx][successor_idx] + \
+                        network.successor_edges[successor_idx][n2]
+                    # weight = reweight_edge(
+                    #     n1, node_idx) + reweight_edge(node_idx, successor_idx) + reweight_edge(successor_idx, n2)
+                    if weight != float("inf") and n1 != n2:
+                        if n1 in CONTR_G.successor_edges and n2 in CONTR_G.successor_edges[n1]:
+                            if CONTR_G.successor_edges[n1][n2] > weight:
+                                CONTR_G.successor_edges[n1][n2] = weight
+                        else:
+                            CONTR_G.insert_new_edge(n1, n2, weight)
 
         distance_matrix = [[] for x in range(len(list_of_leaders))]
 
         delete_edges = set()
         for A in list_of_leaders:
-            distance_matrix[A], previous = Dijkstra.dijkstra_wrapper(
-                network, A, dispatch=True)
-
-            heap = []
-            for idx, value in enumerate(distance_matrix[A]):
-                heap.append((value, idx))
-            heapq.heapify(heap)
-            rtn = heapq.nsmallest(len(heap), heap)
-
-            predecessor_graph = []
-            for (value, idx) in rtn:
-                predecessor_graph.append(idx)
-
-            A_idx = predecessor_graph.index(A)
-            minimum_distance = float("inf")
-            for i in distance_matrix[A]:
-                if i != 0:
-                    minimum_distance = min(minimum_distance, i)
-
-            for i in range(A_idx):
-                B = predecessor_graph[i]
-                if B == A:
+            distance_matrix[A] = Dijkstra.dijkstra_wrapper(
+                CONTR_G, A, potential_function=potential_function, dispatch=True)
+            listy = []
+            for idx, val in CONTR_G.successor_edges[A].items():
+                weight = min(distance_matrix[A][idx], val)
+                CONTR_G.successor_edges[A][idx] = weight
+                listy.append((weight, idx))
+            listy.sort(reverse=True)
+            for i, (_, node_idx) in enumerate(listy):
+                listy[i] = node_idx
+            stn = deepcopy(CONTR_G)
+            marked_edges = []
+            for node_idx, edge_dict in enumerate(stn.successor_edges):
+                for successor_idx, weight in edge_dict.items():
+                    if distance_matrix[A][successor_idx] != distance_matrix[A][node_idx] + weight:
+                        marked_edges.append((node_idx, successor_idx))
+            for node_idx, successor_idx in marked_edges:
+                stn.delete_edge(node_idx, successor_idx)
+            stn.populate_predecessor_edges()
+            marked_edges = []
+            for node_idx, edge_dict in enumerate(stn.predecessor_edges):
+                if A == node_idx:
                     continue
-                for j in range(A_idx):
-                    C = predecessor_graph[j]
-                    if B == C or C == A:
+                for successor_idx, weight in edge_dict.items():
+                    if successor_idx == A or successor_idx == node_idx:
                         continue
-                    if j > i and distance_matrix[A][C] < 0 and distance_matrix[A][B] < 0:
-                        delete_edges.add((C, A))
-                    elif j > i and distance_matrix[A][C] >= 0 and minimum_distance <= distance_matrix[A][C]:
-                        # print(A, B, C)
-                        delete_edges.add((A, C))
+                    AC = distance_matrix[A][node_idx]
+                    AB = distance_matrix[A][successor_idx]
+                    BC = CONTR_G.successor_edges[successor_idx][node_idx]
+                    if (AC < 0 and AB < 0) or (AC >= 0 and BC >= 0):
+                        if AB + BC == AC:
+                            delete_edges.add((A, node_idx))
 
-        # print(delete_edges)
         for node_idx, successor_idx in delete_edges:
             CONTR_G.delete_edge(node_idx, successor_idx)
-        # 0 -> 2, 2 -> 3, 1 -> 2
 
         DISPATCHABLE_STN = STN()
         for name in network.names_list:

@@ -48,9 +48,9 @@ class Dijkstra:
         distances[src_idx] = 0
 
         if dispatch:
-            if network.successor_edges is None:
+            if network.successor_edges is None or potential_function is None:
                 return False
-            return Dijkstra._dispatch_dijkstra(network, src_idx, distances)
+            return Dijkstra._dispatch_dijkstra(network, src_idx, distances, potential_function)
 
         if not potential_function:
             if succ_direction:
@@ -195,7 +195,12 @@ class Dijkstra:
         return distances
 
     @staticmethod
-    def _dispatch_dijkstra(network, src_idx, distances):
+    def _dispatch_dijkstra(network, src_idx, distances, potential_function):
+
+        def reweight_edges(node_idx):
+            weight = distances[node_idx] + \
+                potential_function[src_idx] - potential_function[node_idx]
+            return weight
 
         min_heap = []
         in_queue = {}
@@ -204,29 +209,23 @@ class Dijkstra:
 
         previous = [None for i in range(network.num_tps())]
 
-        heapq.heappush(min_heap, (distances[src_idx], src_idx))
+        heapq.heappush(min_heap, (reweight_edges(src_idx), src_idx))
         in_queue[src_idx] = True
         counter = 0
 
         while min_heap:
             _, u_idx = heapq.heappop(min_heap)
             for successor_idx, new_weight in network.successor_edges[u_idx].items():
-                if (distances[u_idx] + new_weight < distances[successor_idx]) and in_queue[successor_idx] == False:
+                if (reweight_edges(u_idx) + new_weight < reweight_edges(successor_idx)) and in_queue[successor_idx] == False:
                     counter += 1
-                    distances[successor_idx] = new_weight + distances[u_idx]
+                    distances[successor_idx] = new_weight + \
+                        reweight_edges(u_idx)
                     previous[successor_idx] = u_idx
                     heapq.heappush(
-                        min_heap, (distances[successor_idx], successor_idx))
+                        min_heap, (reweight_edges(successor_idx), successor_idx))
                     in_queue[successor_idx] = True
 
-        predecessor_graph = []
-
-        predecessor_graph.append(u_idx)
-
-        if counter == 0:
-            return False, False
-
-        return distances, previous
+        return distances
 
     @staticmethod
     def dijkstra_(network, listy, src_idx):

@@ -27,7 +27,7 @@ def johnson(network):
 
 
 def dispatch(network):
-    return Dispatch.last_ride(network)
+    return Dispatch.fast_dispatch(network)
 
 
 def tarjan(network):
