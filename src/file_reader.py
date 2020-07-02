@@ -187,9 +187,9 @@ class FileReader:
 
 f = FileReader()
 
-stn = f.read_file("../sample_stns/dc-dispatch.stn")
+stn = f.read_file("../sample_stns/dc-hunsberger.stn")
 dispatched_graph = dispatch(stn)
-write_stn(dispatched_graph, "fast_dispatch_2")
+write_stn(dispatched_graph, "slow_dispatch_hunsberger")
 print(dispatched_graph)
 print(Dispatchability.greedy_execute(dispatched_graph, 0))
 
