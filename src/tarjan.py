@@ -21,10 +21,17 @@ class Tarjan:
             if self.ids[i] == -1:
                 self._dfs(i)
         # self.low = [0, 0, 2, 3, 3]
+        rc_map = {}
+        counter = 0
+        for i in self.low:
+            if i not in rc_map:
+                rc_map[i] = counter
+                counter += 1
 
         rigid_components = [[] for i in range(len(set(self.low)))]
         for idx, rc in enumerate(self.low):
-            rigid_components[rc].append(idx)
+            i = rc_map[rc]
+            rigid_components[i].append(idx)
 
         # rigid_components = [[0, 1], [2], [3, 4]]
 

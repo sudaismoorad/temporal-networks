@@ -235,4 +235,4 @@ class STN:
         self.predecessor_edges = [{} for _ in range(self.n)]
         for node_idx, edge_dict in enumerate(self.successor_edges):
             for successor_idx, weight in edge_dict.items():
-                self.predecessor_edges[successor_idx][node_idx] = weight 
+                self.predecessor_edges[successor_idx][node_idx] = weight
