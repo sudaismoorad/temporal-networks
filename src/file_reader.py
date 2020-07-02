@@ -3,6 +3,7 @@ from stnu import STNU
 from algorithms import *
 from random_stn import RandomSTN
 from dispatchability import Dispatchability
+from write_stn import write_stn
 
 
 class FileReader:
@@ -186,8 +187,9 @@ class FileReader:
 
 f = FileReader()
 
-stn = f.read_file("../sample_stns/dc-2.stn")
+stn = f.read_file("../sample_stns/dc-dispatch.stn")
 dispatched_graph = dispatch(stn)
+write_stn(dispatched_graph, "fast_dispatch_2")
 print(dispatched_graph)
 print(Dispatchability.greedy_execute(dispatched_graph, 0))
 

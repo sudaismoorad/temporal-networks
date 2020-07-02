@@ -17,7 +17,7 @@ class Johnson:
         distance_matrix : List[List[int]]
             A 2-D list representing the shortest distances between all the nodes
         """
-        if network.succesor_edges is None:
+        if network.successor_edges is None:
             return False
         num_tps = network.num_tps()
         distance_matrix = [[] for x in range(num_tps)]
@@ -27,7 +27,7 @@ class Johnson:
         if not potential_function:
             return False
 
-        for node_idx in range(network.num_tps):
+        for node_idx in range(network.num_tps()):
             distance_matrix[node_idx] = Dijkstra.dijkstra_wrapper(
                 network, node_idx, potential_function=potential_function)
 

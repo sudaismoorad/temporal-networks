@@ -15,8 +15,21 @@ class Dispatch:
     @staticmethod
     def fast_dispatch(network):
         # O(N^2 log N) time, O(N) extra space
+        if network.dist_up_to_date and network.distance_matrix:
+            pass
+        else:
+            Johnson.johnson(network)
+
         potential_function = BellmanFord.bellman_ford_wrapper(network)
 
+        network.successor_edges = [{} for i in range(network.num_tps())]
+        for node_idx, edge_list in enumerate(network.distance_matrix):
+            for successor_idx, weight in enumerate(edge_list):
+                if node_idx == successor_idx:
+                    continue
+                network.successor_edges[node_idx][successor_idx] = weight
+
+        print("check", network)
         if not potential_function:
             return False
 
@@ -180,12 +193,20 @@ class Dispatch:
     @staticmethod
     def slow_dispatch(network):
         # O(N^3) time, O(N^2) extra space
-        if not network.dist_up_to_date and network.distance_matrix:
+        if network.dist_up_to_date and network.distance_matrix:
             pass
         else:
-            FloydWarshall.floyd_warshall(network)
+            Johnson.johnson(network)
+           
 
         distance_matrix = deepcopy(network.distance_matrix)
+        network.successor_edges = [{} for i in range(network.num_tps())]
+        for node_idx, edge_list in enumerate(network.distance_matrix):
+            for successor_idx, weight in enumerate(edge_list):
+                if node_idx == successor_idx:
+                    continue
+                network.successor_edges[node_idx][successor_idx] = weight
+        print("check", network)
         marked_edges = []
 
         for i in range(network.num_tps()):
@@ -226,12 +247,4 @@ class Dispatch:
 
         return network
 
-    @ staticmethod
-    def _intersecting_edges(leader, child_array):
-        intersecting_edges = []
-        for i in child_array:
-            for j in child_array:
-                if i == j or i == leader or j == leader:
-                    continue
-                intersecting_edges.append(((leader, i), j))
-        return intersecting_edges
+
