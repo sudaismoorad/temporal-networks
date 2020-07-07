@@ -90,7 +90,7 @@ class Dispatch:
 
         CONTR_G = STN()
         for i in list_of_leaders:
-            CONTR_G.insert_new_tp(i)
+            CONTR_G.insert_new_tp(temp_network.names_list[i])
 
         for node_idx in range(len(list_of_leaders)):
             CONTR_G.successor_edges.append({})
@@ -105,6 +105,8 @@ class Dispatch:
                         temp_network.successor_edges[successor_idx][n2]
 
                     if weight != float("inf") and n1 != n2:
+                        n1 = temp_network.names_list[n1]
+                        n2 = temp_network.names_list[n2]
                         n1 = CONTR_G.names_dict[n1]
                         n2 = CONTR_G.names_dict[n2]
                         if n1 in CONTR_G.successor_edges and n2 in CONTR_G.successor_edges[n1]:
@@ -115,24 +117,27 @@ class Dispatch:
 
         for leader_1 in list_of_leaders:
             for leader_2 in list_of_leaders:
-                n1 = CONTR_G.names_dict[leader_1]
-                n2 = CONTR_G.names_dict[leader_2]
-                if leader_1 == leader_2:
+                CONTR_G_index_1 = temp_network.names_list[leader_1]
+                CONTR_G_index_2 = temp_network.names_list[leader_2]
+                n1 = CONTR_G.names_dict[CONTR_G_index_1]
+                n2 = CONTR_G.names_dict[CONTR_G_index_2]
+                if n1 == n2:
                     continue
-                if leader_2 in CONTR_G.successor_edges[n1]:
+                if n2 in CONTR_G.successor_edges[n1]:
                     weight = min(
-                        temp_network.successor_edges[leader_1][leader_2], CONTR_G.successor_edges[n1][n2])
+                        temp_network.successor_edges[n1][n2], CONTR_G.successor_edges[n1][n2])
                     CONTR_G.successor_edges[n1][n2] = weight
                 else:
-                    weight = temp_network.successor_edges[leader_1][leader_2]
+                    weight = temp_network.successor_edges[n1][n2]
                     if weight == float("inf"):
                         continue
-                    CONTR_G.insert_new_edge(n1, n2, weight)
+                    CONTR_G.insert_new_edge(CONTR_G_index_1, CONTR_G_index_2, weight)
 
         distance_matrix = [[] for x in range(len(list_of_leaders))]
 
         delete_edges = set()
         for A in list_of_leaders:
+            A = temp_network.names_list[A]
             A = CONTR_G.names_dict[A]
             distance_matrix[A] = Dijkstra.dijkstra_wrapper(
                 CONTR_G, A, potential_function=potential_function, dispatch=True)
@@ -178,13 +183,19 @@ class Dispatch:
 
         for node_idx, edge_dict in enumerate(CONTR_G.successor_edges):
             for successor_idx, weight in edge_dict.items():
-                node_idx = CONTR_G.names_list[node_idx]
-                successor_idx = CONTR_G.names_list[successor_idx]
-                if node_idx == successor_idx:
+                
+                node_name = CONTR_G.names_list[node_idx]
+                successor_name = CONTR_G.names_list[successor_idx]
+
+                idx_1 = temp_network.names_dict[node_name]
+                idx_2 = temp_network.names_dict[successor_name]
+
+                
+                if idx_1 == idx_2:
                     continue
                 else:
                     DISPATCHABLE_STN.insert_new_edge(
-                        node_idx, successor_idx, weight)
+                        idx_1, idx_2, weight)
 
         for node_idx, successor_idx, weight in CONTR_G_EDGES:
             if weight == float("inf"):
