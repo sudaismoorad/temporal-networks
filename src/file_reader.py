@@ -189,25 +189,18 @@ class FileReader:
 
 f = FileReader()
 
-stn = f.read_file("../sample_stns/dc-200-2.stn")
-
-# tim = time()
-# slow_dispatch = Dispatch.slow_dispatch(stn)
-# write_stn(slow_dispatch, "slow_dispatch_400")
-# print(f"Slow dispatch took {time() - tim} seconds")
+stn = f.read_file("../sample_stns/dc-400.stn")
 
 tim = time()
-fast_dispatch, potential_function = Dispatch.fast_dispatch(stn)
-# print(potential_function)
-for i in range(400):
-    try:
-        disp = Dispatchability.greedy_execute(fast_dispatch, i)
-        print(disp)
-    except:
-        pass
+slow_dispatch, _ = Dispatch.fast_dispatch(stn)
 
-write_stn(fast_dispatch, "fast_dispatch_400")
-print(f"Fast dispatch took {time() - tim} seconds")
+potential_function = bellman_ford(stn)
+
+disp = Dispatchability.greedy_execute(slow_dispatch, potential_function)
+print(disp)
+write_stn(slow_dispatch, "fast_dispatch_400")
+
+print(f"Slow dispatch took {time() - tim} seconds")
 
 # print("########### TESTING FLOYD WARSHALL ###########")
 # floyd_warshall(stn)

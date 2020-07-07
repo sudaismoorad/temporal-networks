@@ -69,7 +69,7 @@ class Dispatchability:
         return True
 
     @staticmethod
-    def greedy_execute(stn, start):
+    def greedy_execute(stn, potential_function):
         """
         Greedy executer for dispatchable STNs
         Input:
@@ -86,22 +86,21 @@ class Dispatchability:
         #     minimum = min(minimum, val)
         # start = potential_function.index(minimum)
         # print(start, stn.successor_edges[start])
-        # start = -1
-        # for node_idx, edge_dict in enumerate(stn.successor_edges):
-        #     flag = True
-        #     if not edge_dict:
-        #         continue
-        #     for successor_idx, weight in edge_dict.items():
-        #         if weight < 0:
-        #             flag = False
-        #             continue
-        #     if flag:
-        #         start = node_idx
-        #         break
+        start = -1
+        for node_idx, edge_dict in enumerate(stn.successor_edges):
+            flag = True
+            if not edge_dict:
+                continue
+            for _, weight in edge_dict.items():
+                if weight < 0:
+                    flag = False
+                    continue
+            if flag:
+                start = node_idx
+                break
 
-        # if start == -1:
-        #     return False
-        # print(start, stn.successor_edges[start])
+        if start == -1:
+            return False
         # variable names lifted from Muscettola, Morris, and Tsamardinos
         p_inf = 2147483646
 #        n_inf = -2147483648
