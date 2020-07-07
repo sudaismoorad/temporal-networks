@@ -1,19 +1,19 @@
-##===================================
+# ===================================
 ##File: dispatchability.py
-##Author: Merrick Chang
-##Date: May 2020
-##===================================
+# Author: Merrick Chang
+# Date: May 2020
+# ===================================
 
 from copy import deepcopy
 import random
 from johnson import Johnson
+
 
 class Dispatchability:
 
     """
     The Dispatchibility class contains static methods relating to dispatchability.
     """
-
 
     @staticmethod
     def _get_predecessor_edges(stn, node_index):
@@ -34,8 +34,6 @@ class Dispatchability:
                 if v == node_index:
                     yield (u, delta)
 
-
-
     @staticmethod
     def _find_point_in_time_window(A, bounds, time):
         """
@@ -54,9 +52,6 @@ class Dispatchability:
             if lower_bound <= time and time <= upper_bound:
                 return A.pop(i)
 
-
-
-
     @staticmethod
     def _check_solution(stn, execution_times):
         """
@@ -73,11 +68,8 @@ class Dispatchability:
                     return False
         return True
 
-
-
-
     @staticmethod
-    def greedy_execute(stn, start):
+    def greedy_execute(stn, potential_function):
         """
         Greedy executer for dispatchable STNs
         Input:
@@ -89,7 +81,12 @@ class Dispatchability:
         Effects:
             Prints out execution sequence.
         """
-        #variable names lifted from Muscettola, Morris, and Tsamardinos
+        minimum = float("inf")
+        for val in potential_function:
+            minimum = min(minimum, val)
+        start = potential_function.index(minimum)
+
+        # variable names lifted from Muscettola, Morris, and Tsamardinos
         p_inf = 2147483646
 #        n_inf = -2147483648
         start_index = start
@@ -98,33 +95,34 @@ class Dispatchability:
         n = range(length)
         if type(start) == str:
             start_index = stn.names_dict[start]
-        A = [start_index] #enabled time points
-        A_min = 0 #minimum lower bound
-        A_max = 0 #minimum upper bound
-        S = [] #executed time points
+        A = [start_index]  # enabled time points
+        A_min = 0  # minimum lower bound
+        A_max = 0  # minimum upper bound
+        S = []  # executed time points
         bounds = []
         execution_times = []
         for x in n:
             bounds.append([0, p_inf])
             execution_times.append(p_inf)
-        bounds[start_index] = [0,0]
+        bounds[start_index] = [0, 0]
         while len(S) < length:
-            print(bounds)
-            assert len(A) != 0, "There are no more enabled points. This STN is not dispatchable."
+            assert len(
+                A) != 0, "There are no more enabled points. This STN is not dispatchable."
             A_min = min([bounds[l][0] for l in A])
             A_max = min([bounds[u][1] for u in A])
             assert A_min <= A_max, "The minimum time is more than the maximum time. This STN is not dispatchable."
-            if time<A_min:
+            if time < A_min:
                 time = random.randint(A_min, A_max)
-            assert time<=A_max, "The time exceeds the maximum value in the enabled points. This STN is not dispatchable."
-            time_point = Dispatchability._find_point_in_time_window(A, bounds, time)
+            assert time <= A_max, "The time exceeds the maximum value in the enabled points. This STN is not dispatchable."
+            time_point = Dispatchability._find_point_in_time_window(
+                A, bounds, time)
             S.append(time_point)
             execution_times[time_point] = time
-            for v,delta in stn.successor_edges[time_point].items():
+            for v, delta in stn.successor_edges[time_point].items():
                 alt = time+delta
                 if bounds[v][1] >= alt:
                     bounds[v][1] = alt
-            for u,delta in Dispatchability._get_predecessor_edges(stn, time_point):
+            for u, delta in Dispatchability._get_predecessor_edges(stn, time_point):
                 alt = time-delta
                 if alt >= bounds[u][0]:
                     bounds[u][0] = alt
@@ -132,7 +130,7 @@ class Dispatchability:
                 if not (u in A or u in S):
                     neg_edges_lead_to_S = True
                     for v, delta in stn.successor_edges[u].items():
-                        if delta<0 and not v in S:
+                        if delta < 0 and not v in S:
                             neg_edges_lead_to_S = False
                             break
                     if neg_edges_lead_to_S:

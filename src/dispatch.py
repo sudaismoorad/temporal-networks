@@ -27,7 +27,7 @@ class Dispatch:
         for node_idx, edge_list in enumerate(temp_network.distance_matrix):
             for successor_idx, weight in enumerate(edge_list):
                 temp_network.successor_edges[node_idx][successor_idx] = weight
-        
+
         if not potential_function:
             return False
 
@@ -52,7 +52,7 @@ class Dispatch:
             stn.delete_edge(i, successor_idx)
 
         rigid_components = Dispatch._tarjan(stn)
-        
+
         temp_rigid_components = [[] for i in range(len(rigid_components))]
         for idx, rigid_component in enumerate(rigid_components):
             for node in rigid_component:
@@ -94,7 +94,6 @@ class Dispatch:
 
         for node_idx in range(len(list_of_leaders)):
             CONTR_G.successor_edges.append({})
-           
 
         for node_idx, edge_dict in enumerate(temp_network.successor_edges):
             for successor_idx, weight in edge_dict.items():
@@ -121,14 +120,14 @@ class Dispatch:
                 if leader_1 == leader_2:
                     continue
                 if leader_2 in CONTR_G.successor_edges[n1]:
-                    weight = min(temp_network.successor_edges[leader_1][leader_2], CONTR_G.successor_edges[n1][n2])
+                    weight = min(
+                        temp_network.successor_edges[leader_1][leader_2], CONTR_G.successor_edges[n1][n2])
                     CONTR_G.successor_edges[n1][n2] = weight
                 else:
                     weight = temp_network.successor_edges[leader_1][leader_2]
                     if weight == float("inf"):
                         continue
                     CONTR_G.insert_new_edge(n1, n2, weight)
-                        
 
         distance_matrix = [[] for x in range(len(list_of_leaders))]
 
@@ -169,7 +168,8 @@ class Dispatch:
                             delete_edges.add((A, node_idx))
 
         for node_idx, successor_idx in delete_edges:
-            CONTR_G.delete_edge(node_idx, successor_idx)
+            if node_idx in CONTR_G.successor_edges and successor_idx in CONTR_G.successor_edges[node_idx]:
+                CONTR_G.delete_edge(node_idx, successor_idx)
 
         DISPATCHABLE_STN = STN()
         for name in temp_network.names_list:
@@ -187,10 +187,12 @@ class Dispatch:
                         node_idx, successor_idx, weight)
 
         for node_idx, successor_idx, weight in CONTR_G_EDGES:
+            if weight == float("inf"):
+                continue
             DISPATCHABLE_STN.insert_new_edge(node_idx, successor_idx, weight)
             DISPATCHABLE_STN.insert_new_edge(successor_idx, node_idx, -weight)
 
-        return DISPATCHABLE_STN
+        return DISPATCHABLE_STN, potential_function
 
     @ staticmethod
     def _tarjan(network):

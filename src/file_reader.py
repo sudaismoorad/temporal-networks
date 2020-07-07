@@ -2,8 +2,10 @@ from stn import STN
 from stnu import STNU
 from algorithms import *
 from random_stn import RandomSTN
+from dispatch import Dispatch
 from dispatchability import Dispatchability
 from write_stn import write_stn
+from time import time
 
 
 class FileReader:
@@ -187,12 +189,19 @@ class FileReader:
 
 f = FileReader()
 
-stn = f.read_file("../sample_stns/dc-hunsberger.stn")
-dispatched_graph = dispatch(stn)
-write_stn(dispatched_graph, "slow_dispatch_hunsberger")
-print(dispatched_graph)
-print(Dispatchability.greedy_execute(dispatched_graph, 0))
+stn = f.read_file("../sample_stns/dc-400.stn")
+# tim = time()
+# slow_dispatch = Dispatch.slow_dispatch(stn)
+# write_stn(slow_dispatch, "slow_dispatch_400")
+# print(f"Slow dispatch took {time() - tim} seconds")
 
+tim = time()
+fast_dispatch, potential_function = Dispatch.fast_dispatch(stn)
+print(potential_function)
+disp = Dispatchability.greedy_execute(fast_dispatch, potential_function)
+print(disp)
+write_stn(fast_dispatch, "fast_dispatch_400")
+print(f"Fast dispatch took {time() - tim} seconds")
 
 # print("########### TESTING FLOYD WARSHALL ###########")
 # floyd_warshall(stn)
