@@ -128,15 +128,13 @@ class FileReader:
                 elif state == 'LINKS':
                     raise Exception(
                         "Simple Temporal Networks do not have contingent links.")
-                else:
-                    pass
         if num_edges != edge_counter:
             raise Exception(
                 "Number of edges does not match the number given above")
         return network
 
     def _read_stnu(self, file):
-        network = STN()
+        network = STNU()
         state = ""
         for line in file:
             if line.startswith('#'):
@@ -144,7 +142,7 @@ class FileReader:
                     state = "NO_POINTS"
                 elif "edges" in line.lower() and "num" in line.lower():
                     state = "NO_EDGES"
-                elif "links" in line.lower():
+                elif "links" in line.lower() and "num" in line.lower():
                     state = "NO_LINKS"
                 elif "names" in line.lower():
                     state = "NAMES"
@@ -152,12 +150,14 @@ class FileReader:
                     state = "EDGES"
                 elif "links" in line.lower():
                     state = "LINKS"
+                    network.contingent_links = [{} for i in range(num_points)]
+                    network.activation_point = [False for i in range(num_points)]
                 else:
                     raise Exception("Invalid Network Type")
             else:
                 if state == 'NO_POINTS':
                     num_points = int(line)
-                    network.length = num_points
+                    network.n = num_points
                     network.successor_edges = [
                         {} for i in range(num_points)]
                     network.names_list = ["0" for i in range(num_points)]
@@ -181,26 +181,31 @@ class FileReader:
                     network.successor_edges[idx_node][idx_successor] = int(
                         weights[1])
                 elif state == 'LINKS':
-                    # deal with contingent links later
-                    pass
-                else:
-                    pass
+                    weights = line.split()
+                    activation_time_point = network.names_dict[weights[0]]
+                    duration = (int(weights[1]), int(weights[2]))
+                    contingent_time_point = network.names_dict[weights[3]]
+                    network.contingent_links[activation_time_point][contingent_time_point] = duration
+                    network.activation_point[activation_time_point] = True
+        return network
 
 
 f = FileReader()
 
-stn = f.read_file("../sample_stns/dc-400.stn")
+stnu = f.read_file("./sample_stnus/dc-2.stnu")
+print(stnu)
 
-tim = time()
-slow_dispatch, _ = Dispatch.fast_dispatch(stn)
+# tim = time()
+# fast_dispatch, _ = Dispatch.fast_dispatch(stn)
 
-potential_function = bellman_ford(stn)
+# print(fast_dispatch)
+# potential_function = bellman_ford(stn)
+# write_stn(fast_dispatch, "fast_dispatch_200")
+# disp = Dispatchability.greedy_execute(fast_dispatch, potential_function)
+# print(disp)
 
-disp = Dispatchability.greedy_execute(slow_dispatch, potential_function)
-print(disp)
-write_stn(slow_dispatch, "fast_dispatch_400")
 
-print(f"Slow dispatch took {time() - tim} seconds")
+# print(f"Fast dispatch took {time() - tim} seconds")
 
 # print("########### TESTING FLOYD WARSHALL ###########")
 # floyd_warshall(stn)
