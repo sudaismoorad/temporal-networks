@@ -10,6 +10,14 @@ from stn import STN
 import heapq
 
 
+def create_APSP(network):
+    temp_network = deepcopy(network)
+    for node_idx, edge_list in enumerate(temp_network.distance_matrix):
+        for successor_idx, weight in enumerate(edge_list):
+            temp_network.successor_edges[node_idx][successor_idx] = weight
+    return temp_network
+
+
 def make_pred_graph(network, distance_matrix, src_idx):
     delete_edges = []
     num_tps = network.num_tps()
@@ -22,6 +30,15 @@ def make_pred_graph(network, distance_matrix, src_idx):
     for i, successor_idx in delete_edges:
         predecessor_graph.delete_edge(i, successor_idx)
     return predecessor_graph
+
+
+def tarjan(network, potential_function):
+    t = Tarjan(network)
+    rigid_components = t.tarjan()
+    rigid_components = sort_rigid_components(
+        rigid_components, potential_function)
+    return rigid_components
+
 
 def sort_rigid_components(rigid_components, potential_function):
     temp_rigid_components = [[] for i in range(len(rigid_components))]
@@ -36,6 +53,7 @@ def sort_rigid_components(rigid_components, potential_function):
         for j in range(len(temp_rigid_components[i])):
             rigid_components[i].append(temp_rigid_components[i][j][1])
     return rigid_components
+
 
 def get_doubly_linked_chain(rigid_components, APSP):
     doubly_linked_chain = []
@@ -54,7 +72,8 @@ def get_doubly_linked_chain(rigid_components, APSP):
             doubly_linked_chain.append((n1, n2, weight))
     return doubly_linked_chain
 
-def reweighting_RC_to_RC(APSP, list_of_leaders, rigid_components):
+
+def connect_leaders(APSP, list_of_leaders, rigid_components):
     # mapping nodes to their leaders
     node_to_leader_map = [None for i in range(APSP.num_tps())]
     for rigid_component in rigid_components:
@@ -106,11 +125,14 @@ def reweighting_RC_to_RC(APSP, list_of_leaders, rigid_components):
                     continue
                 contracted_graph.insert_new_edge(
                     CONTR_G_index_1, CONTR_G_index_2, weight)
+
     return contracted_graph
+
 
 def postorder(stn, root):
     visited = set()
     order = []
+
     def dfs_walk(node):
         visited.add(node)
         for successor_idx in stn.successor_edges[node]:
@@ -119,7 +141,9 @@ def postorder(stn, root):
         order.append(node)
     dfs_walk(root)
     order.reverse()
+
     return order
+
 
 def creating_dispatchable_stn(APSP, contracted_graph, doubly_linked_chain):
     DISPATCHABLE_STN = STN()
@@ -151,6 +175,7 @@ def creating_dispatchable_stn(APSP, contracted_graph, doubly_linked_chain):
         DISPATCHABLE_STN.insert_new_edge(successor_idx, node_idx, -weight)
     return DISPATCHABLE_STN
 
+
 def leader_pred_graph(CONTR_G, distances):
     predecessor_graph = deepcopy(CONTR_G)
     marked_edges = []
@@ -162,6 +187,10 @@ def leader_pred_graph(CONTR_G, distances):
         predecessor_graph.delete_edge(node_idx, successor_idx)
     return predecessor_graph
 
+
+##################################
+# pretty sure the problem is here#
+##################################
 def mark_dominating_edges(leader, APSP, reverse_postorder, distances, delete_edges):
     min_dist = float("inf")
     neg_dist_node = False
@@ -173,7 +202,7 @@ def mark_dominating_edges(leader, APSP, reverse_postorder, distances, delete_edg
             AB = distances[B]
             BC = APSP.successor_edges[B][C]
             if neg_dist_node:
-                if AB < 0:       
+                if AB < 0:
                     if AB + BC == AC:
                         delete_edges.add((leader, C))
             else:
@@ -185,13 +214,6 @@ def mark_dominating_edges(leader, APSP, reverse_postorder, distances, delete_edg
         min_dist = min(min_dist, AC)
         neg_dist_node = False
     return delete_edges
-
-def creating_APSP(network):
-    temp_network = deepcopy(network)
-    for node_idx, edge_list in enumerate(temp_network.distance_matrix):
-        for successor_idx, weight in enumerate(edge_list):
-            temp_network.successor_edges[node_idx][successor_idx] = weight
-    return temp_network
 
 
 class Dispatch:
@@ -210,9 +232,11 @@ class Dispatch:
             return False, False
 
         # creating the APSP
-        temp_network = creating_APSP(network)
-        temp_network_num_tps = temp_network.num_tps()
-        distance_matrix = [[] for _ in range(temp_network_num_tps)]
+        temp_network = create_APSP(network)
+        num_tps = temp_network.num_tps()
+
+        # initializing the distance matrix
+        distance_matrix = [[] for _ in range(num_tps)]
 
         # grabbing the source index
         src_idx = potential_function.index(min(potential_function))
@@ -220,60 +244,63 @@ class Dispatch:
             temp_network, src_idx)
 
         # making predecessor graph for running tarjan on it
-        predecessor_graph = make_pred_graph(temp_network, distance_matrix, src_idx)
+        predecessor_graph = make_pred_graph(
+            temp_network, distance_matrix, src_idx)
 
-        # sorted rigid components 
-        rigid_components = Dispatch._tarjan(predecessor_graph, potential_function)
-        
+        # tarjan returns sorted rigid components
+        rigid_components = tarjan(predecessor_graph, potential_function)
+
         # making a list of leaders
         list_of_leaders = []
         for i in range(len(rigid_components)):
             list_of_leaders.append(rigid_components[i][0])
 
         # creating the doubly linked chain
-        doubly_linked_chain = get_doubly_linked_chain(rigid_components, temp_network)
-        
+        doubly_linked_chain = get_doubly_linked_chain(
+            rigid_components, temp_network)
+
         # Creating the contracted graph with the only time-points being the leader
-        # For every edge going from a RC to another RC, an equivalent edge is inserted from
-        # one leader to another
-        CONTR_G = reweighting_RC_to_RC(temp_network, list_of_leaders, rigid_components)
-        
+        # For every edge going from an RC to another RC, an equivalent edge is
+        # inserted from one leader to another
+        CONTR_G = connect_leaders(
+            temp_network, list_of_leaders, rigid_components)
+
         distance_matrix = [[] for x in range(len(list_of_leaders))]
 
         delete_edges = set()
-        # For every leader A in the contracted graph
+        # For every leader A
         for A in list_of_leaders:
+            # Get the index of A in the contracted graph
             A = temp_network.names_list[A]
             A = CONTR_G.names_dict[A]
+
             # Run dijkstra to get the list of distances from the leader A
             distance_matrix[A] = Dijkstra.dijkstra_wrapper(
                 CONTR_G, A, potential_function=potential_function, dispatch=True)
+
             for idx, val in CONTR_G.successor_edges[A].items():
                 weight = min(distance_matrix[A][idx], val)
                 CONTR_G.successor_edges[A][idx] = weight
 
             # Creating the predecessor graph
             predecessor_graph = leader_pred_graph(CONTR_G, distance_matrix[A])
+
+            # convert the graph into reverse post-order form
             reverse_postorder = postorder(predecessor_graph, A)
 
-            # Deleting dominated edges
-            delete_edges = mark_dominating_edges(A, temp_network, reverse_postorder, distance_matrix[A], delete_edges)
-       
+            # add new dominating edges
+            delete_edges = mark_dominating_edges(
+                A, temp_network, reverse_postorder, distance_matrix[A], delete_edges)
+
         # Delete the marked dominating edges
         for node_idx, successor_idx in delete_edges:
             CONTR_G.delete_edge(node_idx, successor_idx)
 
         # Creating the final dispatchable stn with original time-points
-        DISPATCHABLE_STN = creating_dispatchable_stn(temp_network, CONTR_G, doubly_linked_chain)
+        DISPATCHABLE_STN = creating_dispatchable_stn(
+            temp_network, CONTR_G, doubly_linked_chain)
 
         return DISPATCHABLE_STN, potential_function
-
-    @ staticmethod
-    def _tarjan(network, potential_function):
-        t = Tarjan(network)
-        rigid_components = t.tarjan()
-        rigid_components = sort_rigid_components(rigid_components, potential_function)
-        return rigid_components
 
     @staticmethod
     def slow_dispatch(network):
@@ -300,26 +327,29 @@ class Dispatch:
                     AB = distance_matrix[i][successor_idx]
                     BC = distance_matrix[successor_idx][node_idx]
                     CB = distance_matrix[node_idx][successor_idx]
-                    if (AC < 0 and AB < 0 and AB + BC == AC) and (AB >= 0 and CB >= 0 and AC + CB == AB):
-                        if not marked_edges[i][node_idx] and not marked_edges[i][successor_idx]:
+                    if not marked_edges[i][node_idx] and not marked_edges[i][successor_idx]:
+                        if AC >= 0 and BC >= 0 and AB + BC == AC and AB >= 0 and CB >= 0 and AC + CB == AB:
+                            if (i == 2 or i == 1) and (node_idx == 3 or successor_idx == 3):
+                                print(i, node_idx, successor_idx)
+                            if random < 0.5:
+                                marked_edges[i][node_idx] = True
+                            else:
+                                marked_edges[i][successor_idx] = True
+                        elif AC < 0 and AB < 0 and AB + BC == AC and AC + CB == AB:
+                            if (i == 2 or i == 1) and (node_idx == 3 or successor_idx == 3):
+                                print(i, node_idx, successor_idx)
                             if random() < 0.5:
                                 marked_edges[i][node_idx] = True
                             else:
                                 marked_edges[i][successor_idx] = True
-                    elif (AC >= 0 and BC >= 0 and AB + BC == AC) and (AB < 0 and AC < 0 and AC + CB == AB):
-                        if not marked_edges[i][node_idx] and not marked_edges[i][successor_idx]:
-                            if random() < 0.5:
-                                marked_edges[i][node_idx] = True
-                            else:
-                                marked_edges[i][successor_idx] = True
-                    elif (AC < 0 and AB < 0) or (AC >= 0 and BC >= 0):
-                        if not marked_edges[i][node_idx] and not marked_edges[i][successor_idx]:
-                            if AB + BC == AC:
-                                marked_edges[i][node_idx] = True
-                    elif (AB < 0 and AC < 0) or (AB >= 0 and CB >= 0):
-                        if not marked_edges[i][successor_idx] and not marked_edges[i][node_idx]:
-                            if AC + CB == AB:
-                                marked_edges[i][successor_idx] = True
+                        elif AC >= 0 and BC >= 0 and AB + BC == AC:
+                            marked_edges[i][node_idx] = True
+                        elif AC < 0 and AB < 0 and AB + BC == AC:
+                            marked_edges[i][node_idx] = True
+                        elif AB >= 0 and CB >= 0 and AC + CB == AB:
+                            marked_edges[i][successor_idx] = True
+                        elif AB < 0 and AC < 0 and AC + CB == AB:
+                            marked_edges[i][successor_idx] = True
 
         s = STN()
         s.n = num_tps

@@ -27,4 +27,5 @@ class STNU:
         stringy += f"Contingent Links: {self.contingent_links}\n"
         return stringy
 
-    
+    def num_tps(self):
+        return self.n
