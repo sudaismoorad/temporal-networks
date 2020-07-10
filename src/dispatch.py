@@ -10,26 +10,19 @@ from stn import STN
 import heapq
 
 
-def create_APSP(network):
-    temp_network = deepcopy(network)
-    for node_idx, edge_list in enumerate(temp_network.distance_matrix):
-        for successor_idx, weight in enumerate(edge_list):
-            temp_network.successor_edges[node_idx][successor_idx] = weight
-    return temp_network
-
-
-def make_pred_graph(network, distance_matrix, src_idx):
+def make_pred_graph(network, distances):
     delete_edges = []
     num_tps = network.num_tps()
-    # do it the other way round, instead of deleting, add edges
-    for i in range(num_tps):
-        for successor_idx, weight in network.successor_edges[i].items():
-            if distance_matrix[src_idx][successor_idx] != distance_matrix[src_idx][i] + weight:
-                delete_edges.append((i, successor_idx))
-
-    predecessor_graph = deepcopy(network)
-    for i, successor_idx in delete_edges:
-        predecessor_graph.delete_edge(i, successor_idx)
+    predecessor_graph = STN()
+    predecessor_graph.n = network.n
+    predecessor_graph.names_list = network.names_list
+    predecessor_graph.names_dict = network.names_dict
+    
+    for node_idx in range(num_tps):
+        for successor_idx, weight in network.successor_edges[node_idx].items():
+            if distances[successor_idx] == distances[node_idx] + weight:
+                predecessor_graph.insert_new_edge(node_idx, successor_idx, weight)
+    
     return predecessor_graph
 
 
@@ -38,7 +31,34 @@ def tarjan(network, potential_function):
     rigid_components = t.tarjan()
     rigid_components = sort_rigid_components(
         rigid_components, potential_function)
-    return rigid_components
+    distance_matrices = [[] for i in range(len(rigid_components))]
+    for idx, RC in enumerate(rigid_components):
+        distance_matrices[idx] = [[] for i in range(len(RC))]
+        distance_matrices[idx] = Johnson.johnson()
+
+    leader_to_node_distances = [{} for i in range(len(rigid_components))]
+    node_to_leader_distances = [{} for i in range(len(rigid_components))]
+    for idx, RC in enumerate(rigid_components):
+        reverse_RC = RC[::-1]
+        node_idx = RC[0]
+        reverse_node_idx = reverse_RC[0]
+        reverse_current_distance = network.successor_edges[reverse_node_idx][node_idx]
+        current_distance = 0
+        leader_to_node_distances[idx][node_idx] = current_distance
+        node_to_leader_distances[idx][reverse_node_idx] = current_distance
+        for reverse_successor_idx in reverse_RC[1:]:
+            if reverse_successor_idx == node_idx:
+                continue
+            reverse_current_distance += network.successor_edges[reverse_successor_idx][reverse_node_idx]
+            node_to_leader_distances[idx][reverse_node_idx] = reverse_current_distance
+            reverse_node_idx = reverse_successor_idx
+        for successor_idx in RC[1:]:
+            current_distance += network.successor_edges[node_idx][successor_idx]
+            leader_to_node_distances[idx][successor_idx] = current_distance
+            node_idx = successor_idx
+
+
+    return rigid_components, leader_to_node_distances, node_to_leader_distances
 
 
 def sort_rigid_components(rigid_components, potential_function):
@@ -74,20 +94,20 @@ def get_doubly_linked_chain(rigid_components, APSP):
     return doubly_linked_chain
 
 
-def connect_leaders(APSP, list_of_leaders, rigid_components):
+def connect_leaders(network, list_of_leaders, rigid_components, leader_to_node_distances, node_to_leader_distances):
     # mapping nodes to their leaders
-    node_to_leader_map = [None for i in range(APSP.num_tps())]
+    node_to_leader_map = [None for i in range(network.num_tps())]
     for rigid_component in rigid_components:
         for node_idx in rigid_component:
             node_to_leader_map[node_idx] = rigid_component[0]
 
     contracted_graph = STN()
     for i in list_of_leaders:
-        contracted_graph.insert_new_tp(APSP.names_list[i])
+        contracted_graph.insert_new_tp(network.names_list[i])
 
     for node_idx in range(len(list_of_leaders)):
         contracted_graph.successor_edges.append({})
-    for node_idx, edge_dict in enumerate(APSP.successor_edges):
+    for node_idx, edge_dict in enumerate(network.successor_edges):
         for successor_idx, weight in edge_dict.items():
             if node_idx not in list_of_leaders:
                 n1 = node_to_leader_map[node_idx]
@@ -96,13 +116,13 @@ def connect_leaders(APSP, list_of_leaders, rigid_components):
                 # U ---W--> V
                 # L(U) ---W'--> L(V); W' = D(L(U), U) + W + D(V, L(V))
                 # store distances when youre doing tarjan
-                weight = APSP.successor_edges[n1][node_idx] + \
-                    APSP.successor_edges[node_idx][successor_idx] + \
-                    APSP.successor_edges[successor_idx][n2]
+                weight = leader_to_node_distances[list_of_leaders.index(n1)][node_idx] + \
+                    network.successor_edges[node_idx][successor_idx] + \
+                    network.successor_edges[successor_idx][n2]
 
                 if weight != float("inf") and n1 != n2:
-                    n1 = APSP.names_list[n1]
-                    n2 = APSP.names_list[n2]
+                    n1 = network.names_list[n1]
+                    n2 = network.names_list[n2]
                     n1 = contracted_graph.names_dict[n1]
                     n2 = contracted_graph.names_dict[n2]
                     if n2 in contracted_graph.successor_edges[n1]:
@@ -114,18 +134,18 @@ def connect_leaders(APSP, list_of_leaders, rigid_components):
     # Leader to leader edges with minimum weight
     for leader_1 in list_of_leaders:
         for leader_2 in list_of_leaders:
-            CONTR_G_index_1 = APSP.names_list[leader_1]
-            CONTR_G_index_2 = APSP.names_list[leader_2]
+            CONTR_G_index_1 = network.names_list[leader_1]
+            CONTR_G_index_2 = network.names_list[leader_2]
             n1 = contracted_graph.names_dict[CONTR_G_index_1]
             n2 = contracted_graph.names_dict[CONTR_G_index_2]
             if n1 == n2:
                 continue
             if n2 in contracted_graph.successor_edges[n1]:
                 weight = min(
-                    APSP.successor_edges[n1][n2], contracted_graph.successor_edges[n1][n2])
+                    network.successor_edges[n1][n2], contracted_graph.successor_edges[n1][n2])
                 contracted_graph.successor_edges[n1][n2] = weight
             else:
-                weight = APSP.successor_edges[n1][n2]
+                weight = network.successor_edges[n1][n2]
                 if weight == float("inf"):
                     continue
                 contracted_graph.insert_new_edge(
@@ -233,10 +253,6 @@ class Dispatch:
     @staticmethod
     def fast_dispatch(network):
         # O(N^2 log N) time, O(N) extra space
-        if network.dist_up_to_date and network.distance_matrix:
-            pass
-        else:
-            Johnson.johnson(network)
 
         potential_function = BellmanFord.bellman_ford_wrapper(network)
 
@@ -247,23 +263,22 @@ class Dispatch:
         temp_network = network
         num_tps = temp_network.num_tps()
 
-        # initializing the distance matrix
-        distance_matrix = [[] for _ in range(num_tps)]
+        
 
         # grabbing the source index
         # this does not need to be a matrix
         src_idx = potential_function.index(min(potential_function))
-        distance_matrix[src_idx] = Dijkstra.dijkstra_wrapper(
+        distances = Dijkstra.dijkstra_wrapper(
             temp_network, src_idx)
 
         # making predecessor graph for running tarjan on it
         predecessor_graph = make_pred_graph(
-            temp_network, distance_matrix, src_idx)
+            temp_network, distances)
 
         # tarjan returns sorted rigid components
-        rigid_components = tarjan(predecessor_graph, potential_function)
+        rigid_components, leader_to_node_distances = tarjan(predecessor_graph, potential_function)
 
-        print(rigid_components)
+        
 
         # making a list of leaders
         list_of_leaders = []
@@ -278,7 +293,7 @@ class Dispatch:
         # For every edge going from an RC to another RC, an equivalent edge is
         # inserted from one leader to another
         CONTR_G = connect_leaders(
-            temp_network, list_of_leaders, rigid_components)
+            temp_network, list_of_leaders, rigid_components, leader_to_node_distances)
 
         distance_matrix = [[] for x in range(len(list_of_leaders))]
 
