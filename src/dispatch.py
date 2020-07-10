@@ -109,6 +109,7 @@ def connect_leaders(network, list_of_leaders, rigid_components, leader_to_node_d
         contracted_graph.successor_edges.append({})
     for node_idx, edge_dict in enumerate(network.successor_edges):
         for successor_idx, weight in edge_dict.items():
+            # Change this
             if node_idx not in list_of_leaders:
                 n1 = node_to_leader_map[node_idx]
                 n2 = node_to_leader_map[successor_idx]
@@ -118,7 +119,7 @@ def connect_leaders(network, list_of_leaders, rigid_components, leader_to_node_d
                 # store distances when youre doing tarjan
                 weight = leader_to_node_distances[list_of_leaders.index(n1)][node_idx] + \
                     network.successor_edges[node_idx][successor_idx] + \
-                    network.successor_edges[successor_idx][n2]
+                    node_to_leader_distances[list_of_leaders.index(n2)][successor_idx]
 
                 if weight != float("inf") and n1 != n2:
                     n1 = network.names_list[n1]
