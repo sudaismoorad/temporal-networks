@@ -193,11 +193,11 @@ class FileReader:
 
 f = FileReader()
 
-stn = f.read_file("../sample_stns/dc-hunsberger.stn")
+stn = f.read_file("../sample_stns/dc-3.stn")
 print(stn)
 
 tim = time()
-fast_dispatch, _ = Dispatch.fast_dispatch(stn)
+fast_dispatch = Dispatch.slow_dispatch(stn)
 
 print(fast_dispatch)
 potential_function = bellman_ford(stn)

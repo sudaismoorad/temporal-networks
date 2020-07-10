@@ -11,64 +11,72 @@ import heapq
 
 
 def make_pred_graph(network, distances):
-    delete_edges = []
     num_tps = network.num_tps()
+
     predecessor_graph = STN()
     predecessor_graph.n = network.n
     predecessor_graph.names_list = network.names_list
     predecessor_graph.names_dict = network.names_dict
-    
+
+    predecessor_graph.successor_edges = [{} for _ in range(num_tps)]
+
     for node_idx in range(num_tps):
         for successor_idx, weight in network.successor_edges[node_idx].items():
             if distances[successor_idx] == distances[node_idx] + weight:
-                predecessor_graph.insert_new_edge(node_idx, successor_idx, weight)
-    
+                predecessor_graph.insert_new_edge(
+                    node_idx, successor_idx, weight)
+
     return predecessor_graph
 
 
 def tarjan(network, potential_function):
     t = Tarjan(network)
-    rigid_components = t.tarjan()
+    unsorted_rigid_components = t.tarjan()
     rigid_components = sort_rigid_components(
-        rigid_components, potential_function)
-    distance_matrices = [[] for i in range(len(rigid_components))]
-    for idx, RC in enumerate(rigid_components):
-        distance_matrices[idx] = [[] for i in range(len(RC))]
-        distance_matrices[idx] = Johnson.johnson()
+        unsorted_rigid_components, potential_function)
 
     leader_to_node_distances = [{} for i in range(len(rigid_components))]
     node_to_leader_distances = [{} for i in range(len(rigid_components))]
     for idx, RC in enumerate(rigid_components):
         reverse_RC = RC[::-1]
+
         node_idx = RC[0]
         reverse_node_idx = reverse_RC[0]
-        reverse_current_distance = network.successor_edges[reverse_node_idx][node_idx]
+
         current_distance = 0
+
+        reverse_current_distance = network.successor_edges[reverse_node_idx][node_idx]
+
         leader_to_node_distances[idx][node_idx] = current_distance
         node_to_leader_distances[idx][reverse_node_idx] = current_distance
+
         for reverse_successor_idx in reverse_RC[1:]:
             if reverse_successor_idx == node_idx:
                 continue
             reverse_current_distance += network.successor_edges[reverse_successor_idx][reverse_node_idx]
             node_to_leader_distances[idx][reverse_node_idx] = reverse_current_distance
             reverse_node_idx = reverse_successor_idx
+
         for successor_idx in RC[1:]:
             current_distance += network.successor_edges[node_idx][successor_idx]
             leader_to_node_distances[idx][successor_idx] = current_distance
             node_idx = successor_idx
-
 
     return rigid_components, leader_to_node_distances, node_to_leader_distances
 
 
 def sort_rigid_components(rigid_components, potential_function):
     temp_rigid_components = [[] for i in range(len(rigid_components))]
+
     for idx, rigid_component in enumerate(rigid_components):
         for node in rigid_component:
             temp_rigid_components[idx].append(
                 (potential_function[node], node))
         temp_rigid_components[idx].sort()
+    print(temp_rigid_components)
+
     rigid_components = []
+
     for i in range(len(temp_rigid_components)):
         rigid_components.append([])
         for j in range(len(temp_rigid_components[i])):
@@ -119,7 +127,8 @@ def connect_leaders(network, list_of_leaders, rigid_components, leader_to_node_d
                 # store distances when youre doing tarjan
                 weight = leader_to_node_distances[list_of_leaders.index(n1)][node_idx] + \
                     network.successor_edges[node_idx][successor_idx] + \
-                    node_to_leader_distances[list_of_leaders.index(n2)][successor_idx]
+                    node_to_leader_distances[list_of_leaders.index(
+                        n2)][successor_idx]
 
                 if weight != float("inf") and n1 != n2:
                     n1 = network.names_list[n1]
@@ -153,22 +162,6 @@ def connect_leaders(network, list_of_leaders, rigid_components, leader_to_node_d
                     CONTR_G_index_1, CONTR_G_index_2, weight)
 
     return contracted_graph
-
-
-def postorder(stn, root):
-    visited = set()
-    order = []
-
-    def dfs_walk(node):
-        visited.add(node)
-        for successor_idx in stn.successor_edges[node]:
-            if successor_idx not in visited:
-                dfs_walk(successor_idx)
-        order.append(node)
-    dfs_walk(root)
-    order.reverse()
-
-    return order
 
 
 def creating_dispatchable_stn(APSP, contracted_graph, doubly_linked_chain):
@@ -214,39 +207,68 @@ def leader_pred_graph(CONTR_G, distances):
     return predecessor_graph
 
 
-##################################
-# pretty sure the problem is here#
-##################################
-def mark_dominating_edges(leader, APSP, reverse_postorder, distances, delete_edges):
-    # check if you have to change indices
-    min_dist = float("inf")
-    neg_dist_node = False
-    for C in reverse_postorder:
-        if C == leader:
-            continue
-        AC = distances[C]
-        if AC < 0:
-            neg_dist_node = True
-        for B in reverse_postorder:
-            if B == C:
+def mark_dominating_edges(contracted_graph, leader, distances, delete_edges):
+    predecessor_graph = leader_pred_graph(contracted_graph, distances)
+    print(predecessor_graph)
+    LOOKING_FOR_NEGATIVE = 0
+    FOUND_NEGATIVE = 1
+    num_tps = predecessor_graph.num_tps()
+    visited = [False for _ in range(num_tps)]
+
+    for successor_idx in predecessor_graph.successor_edges[leader]:
+        phase = LOOKING_FOR_NEGATIVE
+        q = deque()
+        for node_idx in predecessor_graph.successor_edges[successor_idx]:
+            q.append(node_idx)
+        cur_dist = 0
+        prev_node_idx = successor_idx
+        while q:
+            node_idx = q.pop()
+            for node_successor_idx in predecessor_graph.successor_edges[node_idx]:
+                q.append(node_successor_idx)
+            cur_dist += predecessor_graph.successor_edges[prev_node_idx][node_idx]
+            prev_node_idx = node_idx
+            if visited[node_idx]:
                 break
-            if leader == B:
-                continue
-            AB = distances[B]
-            BC = APSP.successor_edges[B][C]
-            if neg_dist_node:
-                if AB < 0:
-                    if AB + BC == AC:
-                        delete_edges.add((leader, C))
+            if phase == LOOKING_FOR_NEGATIVE:
+                if cur_dist < 0:
+                    phase = FOUND_NEGATIVE
             else:
-                if B == C:
-                    continue
-                if min_dist <= AC:
-                    if AB + BC == AC:
-                        delete_edges.add((leader, C))
-        min_dist = min(min_dist, AC)
-        neg_dist_node = False
+                if cur_dist < 0:
+                    delete_edges.add((leader, node_idx))
     return delete_edges
+
+
+# def mark_dominating_edges(leader, network, reverse_postorder, distances, delete_edges):
+#     # check if you have to change indices
+#     min_dist = float("inf")
+#     neg_dist_node = False
+#     for C in reverse_postorder:
+#         if C == leader:
+#             continue
+#         AC = distances[C]
+#         if AC < 0:
+#             neg_dist_node = True
+#         for B in reverse_postorder:
+#             if B == C:
+#                 break
+#             if leader == B:
+#                 continue
+#             AB = distances[B]
+#             BC = network.successor_edges[B][C]
+#             if neg_dist_node:
+#                 if AB < 0:
+#                     if AB + BC == AC:
+#                         delete_edges.add((leader, C))
+#             else:
+#                 if B == C:
+#                     continue
+#                 if min_dist <= AC:
+#                     if AB + BC == AC:
+#                         delete_edges.add((leader, C))
+#         min_dist = min(min_dist, AC)
+#         neg_dist_node = False
+#     return delete_edges
 
 
 class Dispatch:
@@ -264,8 +286,6 @@ class Dispatch:
         temp_network = network
         num_tps = temp_network.num_tps()
 
-        
-
         # grabbing the source index
         # this does not need to be a matrix
         src_idx = potential_function.index(min(potential_function))
@@ -277,9 +297,8 @@ class Dispatch:
             temp_network, distances)
 
         # tarjan returns sorted rigid components
-        rigid_components, leader_to_node_distances = tarjan(predecessor_graph, potential_function)
-
-        
+        rigid_components, leader_to_node_distances, node_to_leader_distances = tarjan(
+            predecessor_graph, potential_function)
 
         # making a list of leaders
         list_of_leaders = []
@@ -294,7 +313,7 @@ class Dispatch:
         # For every edge going from an RC to another RC, an equivalent edge is
         # inserted from one leader to another
         CONTR_G = connect_leaders(
-            temp_network, list_of_leaders, rigid_components, leader_to_node_distances)
+            temp_network, list_of_leaders, rigid_components, leader_to_node_distances, node_to_leader_distances)
 
         distance_matrix = [[] for x in range(len(list_of_leaders))]
 
@@ -306,7 +325,7 @@ class Dispatch:
             A = CONTR_G.names_dict[A]
 
             # Run dijkstra to get the list of distances from the leader A
-            distance_matrix[A] = Dijkstra.dijkstra_wrapper(
+            distances = Dijkstra.dijkstra_wrapper(
                 CONTR_G, A, potential_function=potential_function, dispatch=True)
 
             for idx, val in CONTR_G.successor_edges[A].items():
@@ -314,14 +333,17 @@ class Dispatch:
                 CONTR_G.successor_edges[A][idx] = weight
 
             # Creating the predecessor graph
-            predecessor_graph = leader_pred_graph(CONTR_G, distance_matrix[A])
+            # predecessor_graph = leader_pred_graph(CONTR_G, distance_matrix[A])
 
             # convert the graph into reverse post-order form
-            reverse_postorder = postorder(predecessor_graph, A)
+            # reverse_postorder = postorder(predecessor_graph, A)
 
             # add new dominating edges
+            # delete_edges = mark_dominating_edges(
+            #     A, temp_network, reverse_postorder, distance_matrix[A], delete_edges)
+
             delete_edges = mark_dominating_edges(
-                A, temp_network, reverse_postorder, distance_matrix[A], delete_edges)
+                CONTR_G, A, distances, delete_edges)
 
         # Delete the marked dominating edges
         for node_idx, successor_idx in delete_edges:
@@ -358,23 +380,25 @@ class Dispatch:
                     AB = distance_matrix[A][B]
                     BC = distance_matrix[B][C]
                     CB = distance_matrix[C][B]
-                    if not marked_edges[A][C] and not marked_edges[A][B]:
-                        if AC >= 0 and BC >= 0 and AB + BC == AC and AB >= 0 and CB >= 0 and AC + CB == AB:
-                            if random < 0.5:
+                    BA = distance_matrix[B][A]
+                    if not marked_edges[A][C] and not marked_edges[B][C]:
+                        if AC >= 0 and BC >= 0 and AB + BC == AC and BA + AC == BC:
+                            if random() < 0.5:
                                 marked_edges[A][C] = True
                             else:
-                                marked_edges[A][B] = True
-                        elif AC < 0 and AB < 0 and AB + BC == AC and AC + CB == AB:
+                                marked_edges[B][C] = True
+                        elif AC >= 0 and BC >= 0 and AB + BC == AC:
+                            marked_edges[A][C] = True
+                        elif AC >= 0 and BC >= 0 and BA + AC == BC:
+                            marked_edges[B][C] = True
+                    if not marked_edges[A][C] and not marked_edges[A][B]:
+                        if AC < 0 and AB < 0 and AB + BC == AC and AC + CB == AB:
                             if random() < 0.5:
                                 marked_edges[A][C] = True
                             else:
                                 marked_edges[A][B] = True
-                        elif AC >= 0 and BC >= 0 and AB + BC == AC:
-                            marked_edges[A][C] = True
                         elif AC < 0 and AB < 0 and AB + BC == AC:
                             marked_edges[A][C] = True
-                        elif AB >= 0 and CB >= 0 and AC + CB == AB:
-                            marked_edges[A][B] = True
                         elif AB < 0 and AC < 0 and AC + CB == AB:
                             marked_edges[A][B] = True
 
