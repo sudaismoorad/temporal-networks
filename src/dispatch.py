@@ -21,6 +21,7 @@ def create_APSP(network):
 def make_pred_graph(network, distance_matrix, src_idx):
     delete_edges = []
     num_tps = network.num_tps()
+    # do it the other way round, instead of deleting, add edges
     for i in range(num_tps):
         for successor_idx, weight in network.successor_edges[i].items():
             if distance_matrix[src_idx][successor_idx] != distance_matrix[src_idx][i] + weight:
@@ -91,6 +92,10 @@ def connect_leaders(APSP, list_of_leaders, rigid_components):
             if node_idx not in list_of_leaders:
                 n1 = node_to_leader_map[node_idx]
                 n2 = node_to_leader_map[successor_idx]
+                # for each edge in the graph
+                # U ---W--> V
+                # L(U) ---W'--> L(V); W' = D(L(U), U) + W + D(V, L(V))
+                # store distances when youre doing tarjan
                 weight = APSP.successor_edges[n1][node_idx] + \
                     APSP.successor_edges[node_idx][successor_idx] + \
                     APSP.successor_edges[successor_idx][n2]
@@ -192,13 +197,20 @@ def leader_pred_graph(CONTR_G, distances):
 # pretty sure the problem is here#
 ##################################
 def mark_dominating_edges(leader, APSP, reverse_postorder, distances, delete_edges):
+    # check if you have to change indices
     min_dist = float("inf")
     neg_dist_node = False
     for C in reverse_postorder:
+        if C == leader:
+            continue
         AC = distances[C]
         if AC < 0:
             neg_dist_node = True
         for B in reverse_postorder:
+            if B == C:
+                break
+            if leader == B:
+                continue
             AB = distances[B]
             BC = APSP.successor_edges[B][C]
             if neg_dist_node:
@@ -206,7 +218,7 @@ def mark_dominating_edges(leader, APSP, reverse_postorder, distances, delete_edg
                     if AB + BC == AC:
                         delete_edges.add((leader, C))
             else:
-                if leader == B or B == C:
+                if B == C:
                     continue
                 if min_dist <= AC:
                     if AB + BC == AC:
@@ -232,13 +244,14 @@ class Dispatch:
             return False, False
 
         # creating the APSP
-        temp_network = create_APSP(network)
+        temp_network = network
         num_tps = temp_network.num_tps()
 
         # initializing the distance matrix
         distance_matrix = [[] for _ in range(num_tps)]
 
         # grabbing the source index
+        # this does not need to be a matrix
         src_idx = potential_function.index(min(potential_function))
         distance_matrix[src_idx] = Dijkstra.dijkstra_wrapper(
             temp_network, src_idx)
@@ -249,6 +262,8 @@ class Dispatch:
 
         # tarjan returns sorted rigid components
         rigid_components = tarjan(predecessor_graph, potential_function)
+
+        print(rigid_components)
 
         # making a list of leaders
         list_of_leaders = []
@@ -316,40 +331,36 @@ class Dispatch:
         marked_edges = [[False for i in range(
             num_tps)] for i in range(num_tps)]
 
-        for i in range(num_tps):
-            for node_idx in range(num_tps):
-                if i == node_idx:
+        for A in range(num_tps):
+            for C in range(num_tps):
+                if A == C:
                     continue
-                for successor_idx in range(num_tps):
-                    if i == successor_idx or node_idx == successor_idx:
+                for B in range(num_tps):
+                    if A == B or C == B:
                         continue
-                    AC = distance_matrix[i][node_idx]
-                    AB = distance_matrix[i][successor_idx]
-                    BC = distance_matrix[successor_idx][node_idx]
-                    CB = distance_matrix[node_idx][successor_idx]
-                    if not marked_edges[i][node_idx] and not marked_edges[i][successor_idx]:
+                    AC = distance_matrix[A][C]
+                    AB = distance_matrix[A][B]
+                    BC = distance_matrix[B][C]
+                    CB = distance_matrix[C][B]
+                    if not marked_edges[A][C] and not marked_edges[A][B]:
                         if AC >= 0 and BC >= 0 and AB + BC == AC and AB >= 0 and CB >= 0 and AC + CB == AB:
-                            if (i == 2 or i == 1) and (node_idx == 3 or successor_idx == 3):
-                                print(i, node_idx, successor_idx)
                             if random < 0.5:
-                                marked_edges[i][node_idx] = True
+                                marked_edges[A][C] = True
                             else:
-                                marked_edges[i][successor_idx] = True
+                                marked_edges[A][B] = True
                         elif AC < 0 and AB < 0 and AB + BC == AC and AC + CB == AB:
-                            if (i == 2 or i == 1) and (node_idx == 3 or successor_idx == 3):
-                                print(i, node_idx, successor_idx)
                             if random() < 0.5:
-                                marked_edges[i][node_idx] = True
+                                marked_edges[A][C] = True
                             else:
-                                marked_edges[i][successor_idx] = True
+                                marked_edges[A][B] = True
                         elif AC >= 0 and BC >= 0 and AB + BC == AC:
-                            marked_edges[i][node_idx] = True
+                            marked_edges[A][C] = True
                         elif AC < 0 and AB < 0 and AB + BC == AC:
-                            marked_edges[i][node_idx] = True
+                            marked_edges[A][C] = True
                         elif AB >= 0 and CB >= 0 and AC + CB == AB:
-                            marked_edges[i][successor_idx] = True
+                            marked_edges[A][B] = True
                         elif AB < 0 and AC < 0 and AC + CB == AB:
-                            marked_edges[i][successor_idx] = True
+                            marked_edges[A][B] = True
 
         s = STN()
         s.n = num_tps
@@ -361,7 +372,7 @@ class Dispatch:
 
         for i in range(num_tps):
             for j in range(num_tps):
-                if not marked_edges[i][j] and distance_matrix[i][j] != 0 and distance_matrix[i][j] != float("inf"):
+                if not marked_edges[i][j] and i != j and distance_matrix[i][j] != float("inf"):
                     s.insert_new_edge(i, j, distance_matrix[i][j])
 
         return s
@@ -432,7 +443,7 @@ class Dispatch:
 
         for i in range(n):
             for j in range(n):
-                if not marked[i][j] and dm[i][j] != float("inf") and dm[i][j] != 0:
+                if not marked[i][j] and dm[i][j] != float("inf") and i != j:
                     s.insert_new_edge(i, j, dm[i][j])
 
         return s
