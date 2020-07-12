@@ -193,15 +193,21 @@ class FileReader:
 
 f = FileReader()
 
-stn = f.read_file("../sample_stns/dc-3.stn")
+stn = f.read_file("../sample_stns/dc-200.stn")
 print(stn)
 
 tim = time()
-fast_dispatch = Dispatch.slow_dispatch(stn)
-
+fast_dispatch, _ = Dispatch.fast_dispatch(stn)
 print(fast_dispatch)
+
+slow_dispatch = Dispatch.slow_dispatch(stn)
+print(slow_dispatch)
+
 potential_function = bellman_ford(stn)
 # write_stn(fast_dispatch, "fast_dispatch_200")
+disp = Dispatchability.greedy_execute(slow_dispatch, potential_function)
+print(disp)
+
 disp = Dispatchability.greedy_execute(fast_dispatch, potential_function)
 print(disp)
 

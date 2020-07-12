@@ -32,37 +32,11 @@ def make_pred_graph(network, distances):
 def tarjan(network, potential_function):
     t = Tarjan(network)
     unsorted_rigid_components = t.tarjan()
+
     rigid_components = sort_rigid_components(
         unsorted_rigid_components, potential_function)
 
-    leader_to_node_distances = [{} for i in range(len(rigid_components))]
-    node_to_leader_distances = [{} for i in range(len(rigid_components))]
-    for idx, RC in enumerate(rigid_components):
-        reverse_RC = RC[::-1]
-
-        node_idx = RC[0]
-        reverse_node_idx = reverse_RC[0]
-
-        current_distance = 0
-
-        reverse_current_distance = network.successor_edges[reverse_node_idx][node_idx]
-
-        leader_to_node_distances[idx][node_idx] = current_distance
-        node_to_leader_distances[idx][reverse_node_idx] = current_distance
-
-        for reverse_successor_idx in reverse_RC[1:]:
-            if reverse_successor_idx == node_idx:
-                continue
-            reverse_current_distance += network.successor_edges[reverse_successor_idx][reverse_node_idx]
-            node_to_leader_distances[idx][reverse_node_idx] = reverse_current_distance
-            reverse_node_idx = reverse_successor_idx
-
-        for successor_idx in RC[1:]:
-            current_distance += network.successor_edges[node_idx][successor_idx]
-            leader_to_node_distances[idx][successor_idx] = current_distance
-            node_idx = successor_idx
-
-    return rigid_components, leader_to_node_distances, node_to_leader_distances
+    return rigid_components
 
 
 def sort_rigid_components(rigid_components, potential_function):
@@ -73,7 +47,6 @@ def sort_rigid_components(rigid_components, potential_function):
             temp_rigid_components[idx].append(
                 (potential_function[node], node))
         temp_rigid_components[idx].sort()
-    print(temp_rigid_components)
 
     rigid_components = []
 
@@ -102,7 +75,7 @@ def get_doubly_linked_chain(rigid_components, APSP):
     return doubly_linked_chain
 
 
-def connect_leaders(network, list_of_leaders, rigid_components, leader_to_node_distances, node_to_leader_distances):
+def connect_leaders(network, list_of_leaders, rigid_components, potential_function):
     # mapping nodes to their leaders
     node_to_leader_map = [None for i in range(network.num_tps())]
     for rigid_component in rigid_components:
@@ -117,49 +90,31 @@ def connect_leaders(network, list_of_leaders, rigid_components, leader_to_node_d
         contracted_graph.successor_edges.append({})
     for node_idx, edge_dict in enumerate(network.successor_edges):
         for successor_idx, weight in edge_dict.items():
-            # Change this
-            if node_idx not in list_of_leaders:
-                n1 = node_to_leader_map[node_idx]
-                n2 = node_to_leader_map[successor_idx]
-                # for each edge in the graph
-                # U ---W--> V
-                # L(U) ---W'--> L(V); W' = D(L(U), U) + W + D(V, L(V))
-                # store distances when youre doing tarjan
-                weight = leader_to_node_distances[list_of_leaders.index(n1)][node_idx] + \
-                    network.successor_edges[node_idx][successor_idx] + \
-                    node_to_leader_distances[list_of_leaders.index(
-                        n2)][successor_idx]
+            n1 = node_to_leader_map[node_idx]
+            n2 = node_to_leader_map[successor_idx]
+            # U ---W--> V
+            # L(U) ---W'--> L(V); W' = D(L(U), U) + W + D(V, L(V))
+            D_U = potential_function[node_idx] - potential_function[n1]
+            weight = network.successor_edges[node_idx][successor_idx]
+            D_V = potential_function[n2] - \
+                potential_function[successor_idx]
 
-                if weight != float("inf") and n1 != n2:
-                    n1 = network.names_list[n1]
-                    n2 = network.names_list[n2]
-                    n1 = contracted_graph.names_dict[n1]
-                    n2 = contracted_graph.names_dict[n2]
-                    if n2 in contracted_graph.successor_edges[n1]:
-                        if contracted_graph.successor_edges[n1][n2] > weight:
-                            contracted_graph.successor_edges[n1][n2] = weight
-                    else:
-                        contracted_graph.insert_new_edge(n1, n2, weight)
+            weight = D_U + weight + D_V
 
-    # Leader to leader edges with minimum weight
-    for leader_1 in list_of_leaders:
-        for leader_2 in list_of_leaders:
-            CONTR_G_index_1 = network.names_list[leader_1]
-            CONTR_G_index_2 = network.names_list[leader_2]
-            n1 = contracted_graph.names_dict[CONTR_G_index_1]
-            n2 = contracted_graph.names_dict[CONTR_G_index_2]
-            if n1 == n2:
-                continue
-            if n2 in contracted_graph.successor_edges[n1]:
-                weight = min(
-                    network.successor_edges[n1][n2], contracted_graph.successor_edges[n1][n2])
-                contracted_graph.successor_edges[n1][n2] = weight
-            else:
-                weight = network.successor_edges[n1][n2]
-                if weight == float("inf"):
-                    continue
-                contracted_graph.insert_new_edge(
-                    CONTR_G_index_1, CONTR_G_index_2, weight)
+            if weight != float("inf") and n1 != n2:
+                n1 = network.names_list[n1]
+                n2 = network.names_list[n2]
+                n1 = contracted_graph.names_dict[n1]
+                n2 = contracted_graph.names_dict[n2]
+                if n2 in contracted_graph.successor_edges[n1]:
+                    if contracted_graph.successor_edges[n1][n2] > weight:
+                        contracted_graph.successor_edges[n1][n2] = weight
+                else:
+                    contracted_graph.insert_new_edge(n1, n2, weight)
+
+    for node_idx in contracted_graph.successor_edges:
+        for successor_idx in contracted_graph.successor_edges:
+            pass
 
     return contracted_graph
 
@@ -196,6 +151,7 @@ def creating_dispatchable_stn(APSP, contracted_graph, doubly_linked_chain):
 
 
 def leader_pred_graph(CONTR_G, distances):
+    # change later, instead of deepcopy delete, just add
     predecessor_graph = deepcopy(CONTR_G)
     marked_edges = []
     for node_idx, edge_dict in enumerate(predecessor_graph.successor_edges):
@@ -209,7 +165,7 @@ def leader_pred_graph(CONTR_G, distances):
 
 def mark_dominating_edges(contracted_graph, leader, distances, delete_edges):
     predecessor_graph = leader_pred_graph(contracted_graph, distances)
-    print(predecessor_graph)
+
     LOOKING_FOR_NEGATIVE = 0
     FOUND_NEGATIVE = 1
     num_tps = predecessor_graph.num_tps()
@@ -217,58 +173,32 @@ def mark_dominating_edges(contracted_graph, leader, distances, delete_edges):
 
     for successor_idx in predecessor_graph.successor_edges[leader]:
         phase = LOOKING_FOR_NEGATIVE
-        q = deque()
+        stack = deque()
         for node_idx in predecessor_graph.successor_edges[successor_idx]:
-            q.append(node_idx)
+            stack.append((node_idx, successor_idx))
         cur_dist = 0
+        min_dist = float("inf")
         prev_node_idx = successor_idx
-        while q:
-            node_idx = q.pop()
-            for node_successor_idx in predecessor_graph.successor_edges[node_idx]:
-                q.append(node_successor_idx)
+        while stack:
+            node_idx, prev_node_idx = stack.pop()
             cur_dist += predecessor_graph.successor_edges[prev_node_idx][node_idx]
-            prev_node_idx = node_idx
+            if phase == LOOKING_FOR_NEGATIVE and cur_dist < 0:
+                phase = FOUND_NEGATIVE
+            elif phase == FOUND_NEGATIVE and cur_dist < 0:
+                if node_idx in contracted_graph.successor_edges[leader_pred_graph]:
+                    delete_edges.add((leader, node_idx))
+            elif min_dist <= cur_dist and cur_dist >= 0:
+                if node_idx in contracted_graph.successor_edges[leader]:
+                    delete_edges.add((leader, node_idx))
+            min_dist = min(
+                min_dist, predecessor_graph.successor_edges[prev_node_idx][node_idx])
             if visited[node_idx]:
                 break
-            if phase == LOOKING_FOR_NEGATIVE:
-                if cur_dist < 0:
-                    phase = FOUND_NEGATIVE
-            else:
-                if cur_dist < 0:
-                    delete_edges.add((leader, node_idx))
+            visited[node_idx] = True
+            for node_successor_idx in predecessor_graph.successor_edges[node_idx]:
+                stack.append((node_successor_idx, node_idx))
+
     return delete_edges
-
-
-# def mark_dominating_edges(leader, network, reverse_postorder, distances, delete_edges):
-#     # check if you have to change indices
-#     min_dist = float("inf")
-#     neg_dist_node = False
-#     for C in reverse_postorder:
-#         if C == leader:
-#             continue
-#         AC = distances[C]
-#         if AC < 0:
-#             neg_dist_node = True
-#         for B in reverse_postorder:
-#             if B == C:
-#                 break
-#             if leader == B:
-#                 continue
-#             AB = distances[B]
-#             BC = network.successor_edges[B][C]
-#             if neg_dist_node:
-#                 if AB < 0:
-#                     if AB + BC == AC:
-#                         delete_edges.add((leader, C))
-#             else:
-#                 if B == C:
-#                     continue
-#                 if min_dist <= AC:
-#                     if AB + BC == AC:
-#                         delete_edges.add((leader, C))
-#         min_dist = min(min_dist, AC)
-#         neg_dist_node = False
-#     return delete_edges
 
 
 class Dispatch:
@@ -282,22 +212,18 @@ class Dispatch:
         if potential_function == False:
             return False, False
 
-        # creating the APSP
-        temp_network = network
-        num_tps = temp_network.num_tps()
-
         # grabbing the source index
         # this does not need to be a matrix
         src_idx = potential_function.index(min(potential_function))
         distances = Dijkstra.dijkstra_wrapper(
-            temp_network, src_idx)
+            network, src_idx)
 
         # making predecessor graph for running tarjan on it
         predecessor_graph = make_pred_graph(
-            temp_network, distances)
+            network, distances)
 
         # tarjan returns sorted rigid components
-        rigid_components, leader_to_node_distances, node_to_leader_distances = tarjan(
+        rigid_components = tarjan(
             predecessor_graph, potential_function)
 
         # making a list of leaders
@@ -307,21 +233,19 @@ class Dispatch:
 
         # creating the doubly linked chain
         doubly_linked_chain = get_doubly_linked_chain(
-            rigid_components, temp_network)
+            rigid_components, network)
 
         # Creating the contracted graph with the only time-points being the leader
         # For every edge going from an RC to another RC, an equivalent edge is
         # inserted from one leader to another
         CONTR_G = connect_leaders(
-            temp_network, list_of_leaders, rigid_components, leader_to_node_distances, node_to_leader_distances)
-
-        distance_matrix = [[] for x in range(len(list_of_leaders))]
+            network, list_of_leaders, rigid_components, potential_function)
 
         delete_edges = set()
         # For every leader A
         for A in list_of_leaders:
             # Get the index of A in the contracted graph
-            A = temp_network.names_list[A]
+            A = network.names_list[A]
             A = CONTR_G.names_dict[A]
 
             # Run dijkstra to get the list of distances from the leader A
@@ -329,18 +253,8 @@ class Dispatch:
                 CONTR_G, A, potential_function=potential_function, dispatch=True)
 
             for idx, val in CONTR_G.successor_edges[A].items():
-                weight = min(distance_matrix[A][idx], val)
+                weight = min(distances[idx], val)
                 CONTR_G.successor_edges[A][idx] = weight
-
-            # Creating the predecessor graph
-            # predecessor_graph = leader_pred_graph(CONTR_G, distance_matrix[A])
-
-            # convert the graph into reverse post-order form
-            # reverse_postorder = postorder(predecessor_graph, A)
-
-            # add new dominating edges
-            # delete_edges = mark_dominating_edges(
-            #     A, temp_network, reverse_postorder, distance_matrix[A], delete_edges)
 
             delete_edges = mark_dominating_edges(
                 CONTR_G, A, distances, delete_edges)
@@ -351,7 +265,7 @@ class Dispatch:
 
         # Creating the final dispatchable stn with original time-points
         DISPATCHABLE_STN = creating_dispatchable_stn(
-            temp_network, CONTR_G, doubly_linked_chain)
+            network, CONTR_G, doubly_linked_chain)
 
         return DISPATCHABLE_STN, potential_function
 
