@@ -226,24 +226,3 @@ class Dijkstra:
                     in_queue[successor_idx] = True
 
         return distances
-
-    @staticmethod
-    def dijkstra_(network, listy, src_idx):
-
-        distances = [float("inf") for i in range(len(listy))]
-        distances[src_idx] = 0
-
-        min_heap = []
-        heapq.heappush(min_heap, (distances[src_idx], src_idx))
-
-        while min_heap:
-
-            _, u_idx = heapq.heappop(min_heap)
-            for successor_idx, weight in network.successor_edges[u_idx].items():
-                if successor_idx in listy:
-                    if (distances[u_idx] + weight < distances[successor_idx]):
-                        distances[successor_idx] = distances[u_idx] + weight
-                        heapq.heappush(
-                            min_heap, (distances[successor_idx], successor_idx))
-
-        return distances

@@ -33,10 +33,6 @@ class Incremental:
         while min_heap:
             node_idx, weight = heapq.heappop(min_heap)
             for successor_idx, edge_weight in network.successor_edges[node_idx].items():
-                if backward:
-                    if not update_value(successor_idx, edge_weight, node_idx):
-                        return False
-                else:
-                    if not update_value(node_idx, edge_weight, successor_idx):
-                        return False
+                if not update_value(node_idx, edge_weight, successor_idx):
+                    return False
         return True

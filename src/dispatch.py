@@ -25,7 +25,7 @@ def make_pred_graph(network, distances):
             if distances[successor_idx] == distances[node_idx] + weight:
                 predecessor_graph.insert_new_edge(
                     node_idx, successor_idx, weight)
-
+    print("predecessor graph for src_idx", predecessor_graph)
     return predecessor_graph
 
 
@@ -150,21 +150,9 @@ def creating_dispatchable_stn(APSP, contracted_graph, doubly_linked_chain):
     return DISPATCHABLE_STN
 
 
-def leader_pred_graph(CONTR_G, distances):
-    # change later, instead of deepcopy delete, just add
-    predecessor_graph = deepcopy(CONTR_G)
-    marked_edges = []
-    for node_idx, edge_dict in enumerate(predecessor_graph.successor_edges):
-        for successor_idx, weight in edge_dict.items():
-            if distances[successor_idx] != distances[node_idx] + weight:
-                marked_edges.append((node_idx, successor_idx))
-    for node_idx, successor_idx in marked_edges:
-        predecessor_graph.delete_edge(node_idx, successor_idx)
-    return predecessor_graph
-
-
-def mark_dominating_edges(contracted_graph, leader, distances, delete_edges):
-    predecessor_graph = leader_pred_graph(contracted_graph, distances)
+def mark_dominating_edges(contracted_graph, leader, distances, delete_edges, add_edges):
+    print(distances)
+    predecessor_graph = make_pred_graph(contracted_graph, distances)
 
     LOOKING_FOR_NEGATIVE = 0
     FOUND_NEGATIVE = 1
@@ -182,14 +170,17 @@ def mark_dominating_edges(contracted_graph, leader, distances, delete_edges):
         while stack:
             node_idx, prev_node_idx = stack.pop()
             cur_dist += predecessor_graph.successor_edges[prev_node_idx][node_idx]
-            if phase == LOOKING_FOR_NEGATIVE and cur_dist < 0:
-                phase = FOUND_NEGATIVE
-            elif phase == FOUND_NEGATIVE and cur_dist < 0:
-                if node_idx in contracted_graph.successor_edges[leader_pred_graph]:
+
+            if phase == FOUND_NEGATIVE and cur_dist < 0:
+                if node_idx in contracted_graph.successor_edges[leader]:
                     delete_edges.add((leader, node_idx))
             elif min_dist <= cur_dist and cur_dist >= 0:
                 if node_idx in contracted_graph.successor_edges[leader]:
                     delete_edges.add((leader, node_idx))
+
+            if phase == LOOKING_FOR_NEGATIVE and cur_dist < 0:
+                phase = FOUND_NEGATIVE
+
             min_dist = min(
                 min_dist, predecessor_graph.successor_edges[prev_node_idx][node_idx])
             if visited[node_idx]:
@@ -198,7 +189,7 @@ def mark_dominating_edges(contracted_graph, leader, distances, delete_edges):
             for node_successor_idx in predecessor_graph.successor_edges[node_idx]:
                 stack.append((node_successor_idx, node_idx))
 
-    return delete_edges
+    return delete_edges, add_edges
 
 
 class Dispatch:
@@ -215,8 +206,10 @@ class Dispatch:
         # grabbing the source index
         # this does not need to be a matrix
         src_idx = potential_function.index(min(potential_function))
+        print("src idx", src_idx)
         distances = Dijkstra.dijkstra_wrapper(
             network, src_idx)
+        print(distances)
 
         # making predecessor graph for running tarjan on it
         predecessor_graph = make_pred_graph(
@@ -242,23 +235,25 @@ class Dispatch:
             network, list_of_leaders, rigid_components, potential_function)
 
         delete_edges = set()
+        add_edges = set()
         # For every leader A
         for A in list_of_leaders:
             # Get the index of A in the contracted graph
+            print("leader", A)
             A = network.names_list[A]
             A = CONTR_G.names_dict[A]
 
             # Run dijkstra to get the list of distances from the leader A
             distances = Dijkstra.dijkstra_wrapper(
-                CONTR_G, A, potential_function=potential_function, dispatch=True)
+                CONTR_G, A)
 
             for idx, val in CONTR_G.successor_edges[A].items():
                 weight = min(distances[idx], val)
                 CONTR_G.successor_edges[A][idx] = weight
 
-            delete_edges = mark_dominating_edges(
-                CONTR_G, A, distances, delete_edges)
-
+            delete_edges, add_edges = mark_dominating_edges(
+                CONTR_G, A, distances, delete_edges, add_edges)
+        print(add_edges)
         # Delete the marked dominating edges
         for node_idx, successor_idx in delete_edges:
             CONTR_G.delete_edge(node_idx, successor_idx)
