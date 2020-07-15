@@ -193,7 +193,7 @@ class FileReader:
 
 f = FileReader()
 
-stn = f.read_file("../sample_stns/dc-original.stn")
+stn = f.read_file("../sample_stns/dc-hunsberger.stn")
 print(stn)
 
 tim = time()

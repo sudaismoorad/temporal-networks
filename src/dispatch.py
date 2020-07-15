@@ -25,7 +25,7 @@ def make_pred_graph(network, distances):
             if distances[successor_idx] == distances[node_idx] + weight:
                 predecessor_graph.insert_new_edge(
                     node_idx, successor_idx, weight)
-    print("predecessor graph for src_idx", predecessor_graph)
+    
     return predecessor_graph
 
 
@@ -151,9 +151,9 @@ def creating_dispatchable_stn(APSP, contracted_graph, doubly_linked_chain):
 
 
 def mark_dominating_edges(contracted_graph, leader, distances, delete_edges, add_edges):
-    print(distances)
+    
     predecessor_graph = make_pred_graph(contracted_graph, distances)
-
+    print(leader, predecessor_graph)
     LOOKING_FOR_NEGATIVE = 0
     FOUND_NEGATIVE = 1
     num_tps = predecessor_graph.num_tps()
@@ -164,7 +164,7 @@ def mark_dominating_edges(contracted_graph, leader, distances, delete_edges, add
         stack = deque()
         for node_idx in predecessor_graph.successor_edges[successor_idx]:
             stack.append((node_idx, successor_idx))
-        cur_dist = 0
+        cur_dist = predecessor_graph.successor_edges[leader][successor_idx]
         min_dist = float("inf")
         prev_node_idx = successor_idx
         while stack:
@@ -173,13 +173,14 @@ def mark_dominating_edges(contracted_graph, leader, distances, delete_edges, add
 
             if phase == FOUND_NEGATIVE and cur_dist < 0:
                 if node_idx in contracted_graph.successor_edges[leader]:
-                    delete_edges.add((leader, node_idx))
+                    delete_edges.add(node_idx)
             elif min_dist <= cur_dist and cur_dist >= 0:
                 if node_idx in contracted_graph.successor_edges[leader]:
-                    delete_edges.add((leader, node_idx))
-
-            if phase == LOOKING_FOR_NEGATIVE and cur_dist < 0:
+                    delete_edges.add(node_idx)
+            elif phase == LOOKING_FOR_NEGATIVE and cur_dist < 0:
                 phase = FOUND_NEGATIVE
+            # else:
+            #     add_edges.add((leader, node_idx, cur_dist))
 
             min_dist = min(
                 min_dist, predecessor_graph.successor_edges[prev_node_idx][node_idx])
@@ -188,7 +189,8 @@ def mark_dominating_edges(contracted_graph, leader, distances, delete_edges, add
             visited[node_idx] = True
             for node_successor_idx in predecessor_graph.successor_edges[node_idx]:
                 stack.append((node_successor_idx, node_idx))
-
+    print("add", add_edges)
+    print("mark", delete_edges)
     return delete_edges, add_edges
 
 
@@ -206,10 +208,10 @@ class Dispatch:
         # grabbing the source index
         # this does not need to be a matrix
         src_idx = potential_function.index(min(potential_function))
-        print("src idx", src_idx)
+        
         distances = Dijkstra.dijkstra_wrapper(
             network, src_idx)
-        print(distances)
+        
 
         # making predecessor graph for running tarjan on it
         predecessor_graph = make_pred_graph(
@@ -253,8 +255,15 @@ class Dispatch:
 
             delete_edges, add_edges = mark_dominating_edges(
                 CONTR_G, A, distances, delete_edges, add_edges)
-        print(add_edges)
+        
         # Delete the marked dominating edges
+        for i in range(CONTR_G.num_tps()):
+            if i not in delete_edges:
+                if distances[i] != float("inf"):
+                    CONTR_G.insert_new_edge(A, i, distances[i])
+            else:
+                CONTR_G.delete_edge(A, i)
+
         for node_idx, successor_idx in delete_edges:
             CONTR_G.delete_edge(node_idx, successor_idx)
 
