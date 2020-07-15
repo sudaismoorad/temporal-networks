@@ -31,7 +31,7 @@ class Incremental:
             min_heap, (src_idx, updated_potential_function[src_idx]))
 
         while min_heap:
-            node_idx, weight = heapq.heappop(min_heap)
+            node_idx, _ = heapq.heappop(min_heap)
             for successor_idx, edge_weight in network.successor_edges[node_idx].items():
                 if not update_value(node_idx, edge_weight, successor_idx):
                     return False

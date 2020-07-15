@@ -3,9 +3,9 @@ from stnu import STNU
 from algorithms import *
 from random_stn import RandomSTN
 from dispatch import Dispatch
-from dispatchability import Dispatchability
 from write_stn import write_stn
 from time import time
+from dispatchability import *
 
 
 class FileReader:
@@ -194,59 +194,11 @@ class FileReader:
 f = FileReader()
 
 stn = f.read_file("../sample_stns/dc-hunsberger.stn")
-stn.visualize()
+# stn.visualize()
 
-# tim = time()
-# fast_dispatch, _ = Dispatch.fast_dispatch(stn)
-# print(fast_dispatch)
-
-# slow_dispatch = Dispatch.slow_dispatch(stn)
-# print(slow_dispatch)
-
-
-# potential_function = bellman_ford(stn)
-# write_stn(fast_dispatch, "fast_dispatch_200")
-# disp = Dispatchability.greedy_execute(slow_dispatch, potential_function)
-# print(disp)
-
-# disp = Dispatchability.greedy_execute(fast_dispatch, potential_function)
-# print(disp)
-
-
-# print(f"Fast dispatch took {time() - tim} seconds")
-
-# print("########### TESTING FLOYD WARSHALL ###########")
-# floyd_warshall(stn)
-
-# print(stn)
-
-# print("########### TESTING BELLMAN FORD ###########")
-# for i in range(1, 6):
-#     print(bellman_ford(stn, i))
-#     print(stn)
-
-# print("########### TESTING BELLMAN FORD ###########")
-
-# bellman_ford(stn)
-
-# print(stn)
-
-
-# print("########### TESTING DIJKSTRA ###########")
-#
-# for i in range(1, 5):
-#     dijkstra(stn, i)
-#     print(stn)
-#
-# print("########### TESTING JOHNSON ###########")
-
-# johnson(stn)
-
-# print(stn)
-
-# dispatch(stn)
-
-
-# R = RandomSTN()
-
-# R.random_stns(5,5)
+print(johnson(stn))
+fast_dispatch = Dispatch.luke_dispatch(stn)
+print(fast_dispatch)
+potential_function = bellman_ford(stn)
+disp = greedy_execute(stn, potential_function)
+print("disp", disp)

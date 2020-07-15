@@ -49,7 +49,7 @@ class STN:
             the list of edges of the i-th node. Each edge is represented by a tuple - the
             first element of the tuple is the j-th node that the i-th node is connected to
             and the second element is the weight/distance between the i-th and j-th nodes
-        length : int
+        n : int
             Number of nodes in the STN
         distance_matrix : List[List[int]]
             (optional) if used, holds the NxN all-pairs, shortest-paths (APSP) matrix
@@ -68,7 +68,6 @@ class STN:
         self.successor_edges = [] if successor_edges else None
         self.predecessor_edges = [] if predecessor_edges else None
         self.n = 0
-        # need a flag for this? Why?
         self.distance_matrix = []
         self.dist_up_to_date = False
 
@@ -244,12 +243,13 @@ class STN:
         G.add_nodes_from(self.names_list)
         for node_idx, edge_dict in enumerate(self.successor_edges):
             for successor_idx, weight in edge_dict.items():
-                G.add_edge(self.names_list[node_idx], self.names_list[successor_idx], weight=weight)
+                G.add_edge(
+                    self.names_list[node_idx], self.names_list[successor_idx], weight=weight)
         pos = nx.shell_layout(G)
         nx.draw_networkx_nodes(G, pos, node_size=700)
         nx.draw_networkx_edges(G, pos, arrowstyle="->", arrowsize=20, width=6)
-        labels = nx.get_edge_attributes(G,'weight')
-        nx.draw_networkx_edge_labels(G,pos,edge_labels=labels)
+        labels = nx.get_edge_attributes(G, 'weight')
+        nx.draw_networkx_edge_labels(G, pos, edge_labels=labels)
         nx.draw_networkx_labels(G, pos, font_size=20, font_family='sans-serif')
 
         plt.axis('off')

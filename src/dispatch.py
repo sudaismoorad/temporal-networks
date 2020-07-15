@@ -25,7 +25,7 @@ def make_pred_graph(network, distances):
             if distances[successor_idx] == distances[node_idx] + weight:
                 predecessor_graph.insert_new_edge(
                     node_idx, successor_idx, weight)
-    
+
     return predecessor_graph
 
 
@@ -150,11 +150,11 @@ def creating_dispatchable_stn(APSP, contracted_graph, doubly_linked_chain):
     return DISPATCHABLE_STN
 
 
-def mark_dominating_edges(contracted_graph, leader, distances, delete_edges, add_edges):
-    
+def mark_dominating_edges(contracted_graph, leader, distances):
+
+    delete_edges = set()
     predecessor_graph = make_pred_graph(contracted_graph, distances)
-    
-    print(predecessor_graph)
+
     LOOKING_FOR_NEGATIVE = 0
     FOUND_NEGATIVE = 1
     num_tps = predecessor_graph.num_tps()
@@ -185,9 +185,10 @@ def mark_dominating_edges(contracted_graph, leader, distances, delete_edges, add
                 break
             visited[node_idx] = True
             for node_successor_idx in predecessor_graph.successor_edges[node_idx]:
-                stack.append((node_successor_idx, node_idx, phase, min_dist, cur_dist))
-    
-    return delete_edges, add_edges
+                stack.append((node_successor_idx, node_idx,
+                              phase, min_dist, cur_dist))
+
+    return delete_edges
 
 
 class Dispatch:
@@ -204,10 +205,9 @@ class Dispatch:
         # grabbing the source index
         # this does not need to be a matrix
         src_idx = potential_function.index(min(potential_function))
-        
+
         distances = Dijkstra.dijkstra_wrapper(
             network, src_idx)
-        
 
         # making predecessor graph for running tarjan on it
         predecessor_graph = make_pred_graph(
@@ -232,12 +232,9 @@ class Dispatch:
         CONTR_G = connect_leaders(
             network, list_of_leaders, rigid_components, potential_function)
 
-        delete_edges = set()
-        add_edges = set()
         # For every leader A
         for A in list_of_leaders:
             # Get the index of A in the contracted graph
-            print("leader", A)
             A = network.names_list[A]
             A = CONTR_G.names_dict[A]
 
@@ -249,31 +246,24 @@ class Dispatch:
                 weight = min(distances[idx], val)
                 CONTR_G.successor_edges[A][idx] = weight
 
-            delete_edges, add_edges = mark_dominating_edges(
-                CONTR_G, A, distances, delete_edges, add_edges)
-            print("delete edges", len(delete_edges))
+            delete_edges = mark_dominating_edges(
+                CONTR_G, A, distances)
             # Delete the marked dominating edges
             for i in range(CONTR_G.num_tps()):
                 if i == A:
                     continue
+                # need more information here
                 if i not in delete_edges:
                     if distances[i] != float("inf"):
                         CONTR_G.insert_new_edge(A, i, distances[i])
-                elif i in CONTR_G.successor_edges[A]:
+                else:
                     CONTR_G.delete_edge(A, i)
-
 
         # Creating the final dispatchable stn with original time-points
         DISPATCHABLE_STN = creating_dispatchable_stn(
             network, CONTR_G, doubly_linked_chain)
 
-        # counter = 0
-        # for edge_dict in DISPATCHABLE_STN.successor_edges:
-        #     for edge in edge_dict:
-        #         counter += 1
-        # print(counter)
-
-        return DISPATCHABLE_STN, potential_function
+        return DISPATCHABLE_STN
 
     @staticmethod
     def slow_dispatch(network):
