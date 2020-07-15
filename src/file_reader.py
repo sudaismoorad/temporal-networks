@@ -194,22 +194,23 @@ class FileReader:
 f = FileReader()
 
 stn = f.read_file("../sample_stns/dc-hunsberger.stn")
-print(stn)
+stn.visualize()
 
-tim = time()
-fast_dispatch, _ = Dispatch.fast_dispatch(stn)
-print(fast_dispatch)
+# tim = time()
+# fast_dispatch, _ = Dispatch.fast_dispatch(stn)
+# print(fast_dispatch)
 
 # slow_dispatch = Dispatch.slow_dispatch(stn)
 # print(slow_dispatch)
 
-potential_function = bellman_ford(stn)
+
+# potential_function = bellman_ford(stn)
 # write_stn(fast_dispatch, "fast_dispatch_200")
 # disp = Dispatchability.greedy_execute(slow_dispatch, potential_function)
 # print(disp)
 
-disp = Dispatchability.greedy_execute(fast_dispatch, potential_function)
-print(disp)
+# disp = Dispatchability.greedy_execute(fast_dispatch, potential_function)
+# print(disp)
 
 
 # print(f"Fast dispatch took {time() - tim} seconds")

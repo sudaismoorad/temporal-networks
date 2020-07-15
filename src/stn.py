@@ -1,3 +1,5 @@
+import matplotlib.pyplot as plt
+import networkx as nx
 # =============================
 #  FILE:    stn.py
 #  AUTHOR:  Sudais Moorad / Muhammad Furrukh Asif
@@ -236,3 +238,19 @@ class STN:
         for node_idx, edge_dict in enumerate(self.successor_edges):
             for successor_idx, weight in edge_dict.items():
                 self.predecessor_edges[successor_idx][node_idx] = weight
+
+    def visualize(self):
+        G = nx.DiGraph()
+        G.add_nodes_from(self.names_list)
+        for node_idx, edge_dict in enumerate(self.successor_edges):
+            for successor_idx, weight in edge_dict.items():
+                G.add_edge(self.names_list[node_idx], self.names_list[successor_idx], weight=weight)
+        pos = nx.shell_layout(G)
+        nx.draw_networkx_nodes(G, pos, node_size=700)
+        nx.draw_networkx_edges(G, pos, arrowstyle="->", arrowsize=20, width=6)
+        labels = nx.get_edge_attributes(G,'weight')
+        nx.draw_networkx_edge_labels(G,pos,edge_labels=labels)
+        nx.draw_networkx_labels(G, pos, font_size=20, font_family='sans-serif')
+
+        plt.axis('off')
+        plt.show()

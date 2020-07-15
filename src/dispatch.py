@@ -153,7 +153,8 @@ def creating_dispatchable_stn(APSP, contracted_graph, doubly_linked_chain):
 def mark_dominating_edges(contracted_graph, leader, distances, delete_edges, add_edges):
     
     predecessor_graph = make_pred_graph(contracted_graph, distances)
-    print(leader, predecessor_graph)
+    
+    print(predecessor_graph)
     LOOKING_FOR_NEGATIVE = 0
     FOUND_NEGATIVE = 1
     num_tps = predecessor_graph.num_tps()
@@ -161,16 +162,15 @@ def mark_dominating_edges(contracted_graph, leader, distances, delete_edges, add
 
     for successor_idx in predecessor_graph.successor_edges[leader]:
         phase = LOOKING_FOR_NEGATIVE
+        min_dist = float("inf")
+        cur_dist = predecessor_graph.successor_edges[leader][successor_idx]
         stack = deque()
         for node_idx in predecessor_graph.successor_edges[successor_idx]:
-            stack.append((node_idx, successor_idx))
-        cur_dist = predecessor_graph.successor_edges[leader][successor_idx]
-        min_dist = float("inf")
+            stack.append((node_idx, successor_idx, phase, min_dist, cur_dist))
         prev_node_idx = successor_idx
         while stack:
-            node_idx, prev_node_idx = stack.pop()
+            node_idx, prev_node_idx, phase, min_dist, cur_dist = stack.pop()
             cur_dist += predecessor_graph.successor_edges[prev_node_idx][node_idx]
-
             if phase == FOUND_NEGATIVE and cur_dist < 0:
                 if node_idx in contracted_graph.successor_edges[leader]:
                     delete_edges.add(node_idx)
@@ -179,18 +179,14 @@ def mark_dominating_edges(contracted_graph, leader, distances, delete_edges, add
                     delete_edges.add(node_idx)
             elif phase == LOOKING_FOR_NEGATIVE and cur_dist < 0:
                 phase = FOUND_NEGATIVE
-            # else:
-            #     add_edges.add((leader, node_idx, cur_dist))
-
             min_dist = min(
                 min_dist, predecessor_graph.successor_edges[prev_node_idx][node_idx])
             if visited[node_idx]:
                 break
             visited[node_idx] = True
             for node_successor_idx in predecessor_graph.successor_edges[node_idx]:
-                stack.append((node_successor_idx, node_idx))
-    print("add", add_edges)
-    print("mark", delete_edges)
+                stack.append((node_successor_idx, node_idx, phase, min_dist, cur_dist))
+    
     return delete_edges, add_edges
 
 
@@ -255,21 +251,27 @@ class Dispatch:
 
             delete_edges, add_edges = mark_dominating_edges(
                 CONTR_G, A, distances, delete_edges, add_edges)
-        
-        # Delete the marked dominating edges
-        for i in range(CONTR_G.num_tps()):
-            if i not in delete_edges:
-                if distances[i] != float("inf"):
-                    CONTR_G.insert_new_edge(A, i, distances[i])
-            else:
-                CONTR_G.delete_edge(A, i)
+            print("delete edges", len(delete_edges))
+            # Delete the marked dominating edges
+            for i in range(CONTR_G.num_tps()):
+                if i == A:
+                    continue
+                if i not in delete_edges:
+                    if distances[i] != float("inf"):
+                        CONTR_G.insert_new_edge(A, i, distances[i])
+                elif i in CONTR_G.successor_edges[A]:
+                    CONTR_G.delete_edge(A, i)
 
-        for node_idx, successor_idx in delete_edges:
-            CONTR_G.delete_edge(node_idx, successor_idx)
 
         # Creating the final dispatchable stn with original time-points
         DISPATCHABLE_STN = creating_dispatchable_stn(
             network, CONTR_G, doubly_linked_chain)
+
+        # counter = 0
+        # for edge_dict in DISPATCHABLE_STN.successor_edges:
+        #     for edge in edge_dict:
+        #         counter += 1
+        # print(counter)
 
         return DISPATCHABLE_STN, potential_function
 
