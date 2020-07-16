@@ -53,6 +53,12 @@ The STN class creates a Simple Temporal Network with the following algorithms:
 6. Generation of random STNs to support empirical evaluation
 7. Different kinds of “path-consistency” algorithms for STNs
 
+All algorithms can be accessed by importing the stn_algorithms module as follows:
+```
+from stn_algorithms import *
+# (add examples here)
+```
+
 #### Algorithms on STNs
 
 1. Floyd-Warshall, Bellman-Ford, Dijkstra, Johnson's
