@@ -150,7 +150,8 @@ class FileReader:
                     state = "EDGES"
                 elif "links" in line.lower():
                     state = "LINKS"
-                    network.contingent_links = [False for i in range(num_points)]
+                    network.contingent_links = [
+                        False for i in range(num_points)]
                     network.activation_point = [[
                         False for i in range(num_points)] for i in range(num_points)]
                 else:
@@ -159,11 +160,16 @@ class FileReader:
                 if state == 'NO_POINTS':
                     num_points = int(line)
                     network.n = num_points
-                    network.successor_edges = [
+
+                    if network.successor_edges is not None:
+                        network.successor_edges = [
+                            {} for i in range(num_points)]
+                    if network.predecessor_edges is not None:
+                        network.predecessor_edges = [
+                            {} for i in range(num_points)]
+                    network.ou_edges = [
                         {} for i in range(num_points)]
-                    ou_edges = [
-                        {} for i in range(num_points)]
-                    ol_edges = [
+                    network.ol_edges = [
                         {} for i in range(num_points)]
                     network.names_list = ["0" for i in range(num_points)]
                 elif state == 'NO_EDGES':
@@ -183,27 +189,32 @@ class FileReader:
                     # make a list of list of tuples
                     node_idx = network.names_dict[weights[0]]
                     successor_idx = network.names_dict[weights[2]]
-                    network.successor_edges[node_idx][successor_idx] = int(
+                    if network.successor_edges is not None:
+                        network.successor_edges[node_idx][successor_idx] = int(
+                            weights[1])
+                    if network.predecessor_edges is not None:
+                        network.predecessor_edges[successor_idx][node_idx] = int(
+                            weights[1])
+                    network.ou_edges[node_idx][successor_idx] = int(
                         weights[1])
-                    ou_edges[node_idx][successor_idx] = int(
-                        weights[1])
-                    ol_edges[node_idx][successor_idx] = int(
+                    network.ol_edges[node_idx][successor_idx] = int(
                         weights[1])
                 elif state == 'LINKS':
                     weights = line.split()
                     activation_time_point = network.names_dict[weights[0]]
                     duration = (int(weights[1]), int(weights[2]))
                     contingent_time_point = network.names_dict[weights[3]]
-                    network.contingent_links[contingent_time_point] = (activation_time_point, duration[0], duration[1], contingent_time_point)                 
+                    network.contingent_links[contingent_time_point] = (
+                        activation_time_point, duration[0], duration[1], contingent_time_point)
                     network.activation_point[activation_time_point][contingent_time_point] = True
-                    ol_edges[activation_time_point][contingent_time_point] = duration[0]
-                    ou_edges[activation_time_point][contingent_time_point] = duration[1]
+                    network.ol_edges[activation_time_point][contingent_time_point] = duration[0]
+                    network.ou_edges[activation_time_point][contingent_time_point] = duration[1]
         return network
 
 
 f = FileReader()
 
-stn = f.read_file("../sample_stnus/dc-5.stnu")
+stn = f.read_file("../sample_stnus/dc-2.stnu")
 # stn.visualize()
 
 # print(johnson(stn))

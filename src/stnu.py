@@ -1,6 +1,6 @@
 class STNU:
 
-    def __init__(self, successor_edges=True, predecessor_edges=False):
+    def __init__(self, successor_edges=True, predecessor_edges=True):
         self.names_dict = {}
         self.names_list = []
         self.successor_edges = [] if successor_edges else None
@@ -27,6 +27,8 @@ class STNU:
         if self.predecessor_edges:
             stringy += f"Predecessor edges of each node: {self.predecessor_edges}\n"
         stringy += f"Contingent Links: {self.contingent_links}\n"
+        stringy += f"Ordinary Lower Edges: {self.ol_edges}\n"
+        stringy += f"Ordinary Upper Edges: {self.ou_edges}\n"
         return stringy
 
     def num_tps(self):
@@ -51,5 +53,3 @@ class STNU:
     #         if tp2_idx in self.successor_edges[tp1_idx]:
     #             self.successor_edges[tp1_idx][tp2_idx] = int(weight)
     #         else:
-
-
