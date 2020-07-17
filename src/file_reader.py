@@ -203,12 +203,17 @@ class FileReader:
 
 f = FileReader()
 
-stn = f.read_file("../sample_stns/dc-APSP.stn")
+stn = f.read_file("../sample_stnus/dc-5.stnu")
 # stn.visualize()
 
-print(johnson(stn))
-fast_dispatch = Dispatch.luke_dispatch(stn)
-print(fast_dispatch)
-potential_function = bellman_ford(stn)
-disp = Dispatchability.greedy_execute(stn, potential_function)
-print("disp", disp)
+# print(johnson(stn))
+# fast_dispatch = Dispatch.luke_dispatch(stn)
+# print(fast_dispatch)
+# potential_function = bellman_ford(stn)
+# disp = Dispatchability.greedy_execute(stn, potential_function)
+# print("disp", disp)
+
+print(stn)
+
+dc = dc_cairo_et_al_2018(stn)
+print(dc)

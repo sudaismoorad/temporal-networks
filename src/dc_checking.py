@@ -14,7 +14,7 @@ def morris_2014():
 
 def init_potential(edge_dict):
     N = len(edge_dict)
-    potential_function = [0 for _ in N]
+    potential_function = [0 for _ in range(N)]
     for _ in range(1, N):
         for V in range(N):
             for W, w in edge_dict.items():
@@ -93,8 +93,20 @@ def update_potential(network, potential_function, activation_point):
 
     min_heap = []
     heappush(
-        min_heap, (activation_point, updated_potential_function[activation_point]))
-
+        min_heap, (updated_potential_function[activation_point], activation_point))
+    while min_heap:
+        _, Q = heappop(min_heap)
+        for P, edge_dict in enumerate(network.ol_edges):
+            for Q, w in edge_dict.items():
+                if updated_potential_function[P] < updated_potential_function[Q] - w:
+                    updated_potential_function[P] = updated_potential_function[Q] - w
+                    for activation_point, _ in min_heap:
+                        if activation_point == P:
+                            idx = min_heap.index(P)
+                            min_heap[idx][0] = potential_function[P] - updated_potential_function[P]
+                        else:
+                            network.insert_ordinary_edge(potential_function[P] - updated_potential_function[P], P)
+    return updated_potential_function
 
 
 

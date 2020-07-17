@@ -4,10 +4,11 @@ from dijkstra import Dijkstra
 from johnson import Johnson
 from dispatch import Dispatch
 from tarjan import Tarjan
+from dc_checking import *
 
 
 __all__ = ['floyd_warshall', 'bellman_ford',
-           'dijkstra', 'johnson', 'dispatch', 'tarjan']
+           'dijkstra', 'johnson', 'dispatch', 'tarjan', 'dc_cairo_et_al_2018']
 
 
 def floyd_warshall(network):
@@ -29,7 +30,9 @@ def johnson(network):
 def dispatch(network):
     return Dispatch.slow_dispatch(network)
 
-
+def dc_cairo_et_al_2018(network):
+    return cairo_et_al_2018(network)
+    
 def tarjan(network):
     t = Tarjan(network)
     return t.tarjan()
