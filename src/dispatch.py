@@ -150,11 +150,51 @@ def creating_dispatchable_stn(APSP, contracted_graph, doubly_linked_chain):
     return DISPATCHABLE_STN
 
 
+# def mark_dominating_edges(contracted_graph, leader, distances):
+
+#     delete_edges = set()
+#     predecessor_graph = make_pred_graph(contracted_graph, distances)
+
+#     LOOKING_FOR_NEGATIVE = 0
+#     FOUND_NEGATIVE = 1
+#     num_tps = predecessor_graph.num_tps()
+#     visited = [False for _ in range(num_tps)]
+
+#     for successor_idx in predecessor_graph.successor_edges[leader]:
+#         phase = LOOKING_FOR_NEGATIVE
+#         min_dist = float("inf")
+#         cur_dist = predecessor_graph.successor_edges[leader][successor_idx]
+#         stack = deque()
+#         for node_idx in predecessor_graph.successor_edges[successor_idx]:
+#             stack.append((node_idx, successor_idx, phase, min_dist, cur_dist))
+#         prev_node_idx = successor_idx
+#         while stack:
+#             node_idx, prev_node_idx, phase, min_dist, cur_dist = stack.pop()
+#             cur_dist += predecessor_graph.successor_edges[prev_node_idx][node_idx]
+#             if phase == FOUND_NEGATIVE and cur_dist < 0:
+#                 if node_idx in contracted_graph.successor_edges[leader]:
+#                     delete_edges.add(node_idx)
+#             elif min_dist <= cur_dist and cur_dist >= 0:
+#                 if node_idx in contracted_graph.successor_edges[leader]:
+#                     delete_edges.add(node_idx)
+#             elif phase == LOOKING_FOR_NEGATIVE and cur_dist < 0:
+#                 phase = FOUND_NEGATIVE
+#             min_dist = min(
+#                 min_dist, predecessor_graph.successor_edges[prev_node_idx][node_idx])
+#             if visited[node_idx]:
+#                 break
+#             visited[node_idx] = True
+#             for node_successor_idx in predecessor_graph.successor_edges[node_idx]:
+#                 stack.append((node_successor_idx, node_idx,
+#                               phase, min_dist, cur_dist))
+
+#     return delete_edges
+
 def mark_dominating_edges(contracted_graph, leader, distances):
 
     delete_edges = set()
     predecessor_graph = make_pred_graph(contracted_graph, distances)
-
+    print(leader, predecessor_graph)
     LOOKING_FOR_NEGATIVE = 0
     FOUND_NEGATIVE = 1
     num_tps = predecessor_graph.num_tps()
@@ -164,6 +204,8 @@ def mark_dominating_edges(contracted_graph, leader, distances):
         phase = LOOKING_FOR_NEGATIVE
         min_dist = float("inf")
         cur_dist = predecessor_graph.successor_edges[leader][successor_idx]
+        if cur_dist < 0:
+            phase = FOUND_NEGATIVE
         stack = deque()
         for node_idx in predecessor_graph.successor_edges[successor_idx]:
             stack.append((node_idx, successor_idx, phase, min_dist, cur_dist))
@@ -171,12 +213,11 @@ def mark_dominating_edges(contracted_graph, leader, distances):
         while stack:
             node_idx, prev_node_idx, phase, min_dist, cur_dist = stack.pop()
             cur_dist += predecessor_graph.successor_edges[prev_node_idx][node_idx]
+            print(cur_dist, min_dist, phase)
             if phase == FOUND_NEGATIVE and cur_dist < 0:
-                if node_idx in contracted_graph.successor_edges[leader]:
-                    delete_edges.add(node_idx)
+                delete_edges.add(node_idx)
             elif min_dist <= cur_dist and cur_dist >= 0:
-                if node_idx in contracted_graph.successor_edges[leader]:
-                    delete_edges.add(node_idx)
+                delete_edges.add(node_idx)
             elif phase == LOOKING_FOR_NEGATIVE and cur_dist < 0:
                 phase = FOUND_NEGATIVE
             min_dist = min(

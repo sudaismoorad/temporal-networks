@@ -5,6 +5,8 @@ class STNU:
         self.names_list = []
         self.successor_edges = [] if successor_edges else None
         self.predecessor_edges = [] if predecessor_edges else None
+        self.ou_edges = []
+        self.ol_edges = []
         self.contingent_links = []
         self.n = 0
         self.activation_point = []
@@ -29,3 +31,25 @@ class STNU:
 
     def num_tps(self):
         return self.n
+
+    def insert_ordinary_edge(self, tp1, tp2, weight):
+        tp1_idx = self.names_dict[tp1] if type(tp1) == str else tp1
+        tp2_idx = self.names_dict[tp2] if type(tp2) == str else tp2
+
+        if self.successor_edges is not None:
+            self.successor_edges[tp1_idx][tp2_idx] = int(weight)
+        if self.predecessor_edges is not None:
+            self.predecessor_edges[tp2_idx][tp1_idx] = int(weight)
+        self.ou_edges[tp1_idx][tp2_idx] = int(weight)
+        self.ol_edges[tp1_idx][tp2_idx] = int(weight)
+
+    # def insert_or_update_ordinary_edge(self, tp1, tp2, weight):
+    #     tp1_idx = self.names_dict[tp1] if type(tp1) == str else tp1
+    #     tp2_idx = self.names_dict[tp2] if type(tp2) == str else tp2
+
+    #     if self.successor_edges is not None:
+    #         if tp2_idx in self.successor_edges[tp1_idx]:
+    #             self.successor_edges[tp1_idx][tp2_idx] = int(weight)
+    #         else:
+
+

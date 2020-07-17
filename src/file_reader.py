@@ -5,7 +5,7 @@ from random_stn import RandomSTN
 from dispatch import Dispatch
 from write_stn import write_stn
 from time import time
-from dispatchability import *
+from dispatchability import Dispatchability
 
 
 class FileReader:
@@ -150,9 +150,9 @@ class FileReader:
                     state = "EDGES"
                 elif "links" in line.lower():
                     state = "LINKS"
-                    network.contingent_links = [{} for i in range(num_points)]
-                    network.activation_point = [
-                        False for i in range(num_points)]
+                    network.contingent_links = [False for i in range(num_points)]
+                    network.activation_point = [[
+                        False for i in range(num_points)] for i in range(num_points)]
                 else:
                     raise Exception("Invalid Network Type")
             else:
@@ -160,6 +160,10 @@ class FileReader:
                     num_points = int(line)
                     network.n = num_points
                     network.successor_edges = [
+                        {} for i in range(num_points)]
+                    ou_edges = [
+                        {} for i in range(num_points)]
+                    ol_edges = [
                         {} for i in range(num_points)]
                     network.names_list = ["0" for i in range(num_points)]
                 elif state == 'NO_EDGES':
@@ -177,28 +181,34 @@ class FileReader:
                 elif state == 'EDGES':
                     weights = line.split()
                     # make a list of list of tuples
-                    idx_node = network.names_dict[weights[0]]
-                    idx_successor = network.names_dict[weights[2]]
-                    network.successor_edges[idx_node][idx_successor] = int(
+                    node_idx = network.names_dict[weights[0]]
+                    successor_idx = network.names_dict[weights[2]]
+                    network.successor_edges[node_idx][successor_idx] = int(
+                        weights[1])
+                    ou_edges[node_idx][successor_idx] = int(
+                        weights[1])
+                    ol_edges[node_idx][successor_idx] = int(
                         weights[1])
                 elif state == 'LINKS':
                     weights = line.split()
                     activation_time_point = network.names_dict[weights[0]]
                     duration = (int(weights[1]), int(weights[2]))
                     contingent_time_point = network.names_dict[weights[3]]
-                    network.contingent_links[activation_time_point][contingent_time_point] = duration
-                    network.activation_point[activation_time_point] = True
+                    network.contingent_links[contingent_time_point] = (activation_time_point, duration[0], duration[1], contingent_time_point)                 
+                    network.activation_point[activation_time_point][contingent_time_point] = True
+                    ol_edges[activation_time_point][contingent_time_point] = duration[0]
+                    ou_edges[activation_time_point][contingent_time_point] = duration[1]
         return network
 
 
 f = FileReader()
 
-stn = f.read_file("../sample_stns/dc-hunsberger.stn")
+stn = f.read_file("../sample_stns/dc-APSP.stn")
 # stn.visualize()
 
 print(johnson(stn))
 fast_dispatch = Dispatch.luke_dispatch(stn)
 print(fast_dispatch)
 potential_function = bellman_ford(stn)
-disp = greedy_execute(stn, potential_function)
+disp = Dispatchability.greedy_execute(stn, potential_function)
 print("disp", disp)

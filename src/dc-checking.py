@@ -12,20 +12,22 @@ def morris_2014():
     pass
 
 
-def init_potential(network):
-    N = network.num_tps()
+def init_potential(edge_dict):
+    N = len(edge_dict)
     potential_function = [0 for _ in N]
     for _ in range(1, N):
-        for V, w, W in network.lo.items():
-            potential_function[V] = max(
-                potential_function[V], potential_function[W] - w)
+        for V in range(N):
+            for W, w in edge_dict.items():
+                potential_function[V] = max(
+                    potential_function[V], potential_function[W] - w)
     return potential_function
 
 
 def negative_cycle(network, potential_function):
-    for V, w, W in network.lo:
-        if potential_function[V] < (potential_function[W] - w):
-            return True
+    for V, edge_dict in network.ol_edges:
+        for W, w in edge_dict.items():
+            if potential_function[V] < (potential_function[W] - w):
+                return True
     return False
 
 
@@ -33,10 +35,10 @@ def apply_relax_lower(network, W, C):
     delta_W_C = network.successor_edges[W][C] if C in network.successor_edges[W] else float(
         "inf")
     edges = set()
-    _, x, y, _ = get_everything(C)
+    _, x, y, _ = network.contingent_links[C]
     if delta_W_C >= (y - x):
         return edges
-    elif W in network.contingent_links:
+    elif network.contingent_links[W] != False:
         return edges
     else:
         return edges
@@ -44,16 +46,17 @@ def apply_relax_lower(network, W, C):
 
 def close_relax_lower(network, potential_function, C):
     heap = []
-    for W, delta_W_C, C_prime in network.ordinary_edges:
-        if C_prime == C:
-            heappush(heap, (potential_function[W] + delta_W_C, W))
+    for W, edge_dict in enumerate(network.ol_edges):
+        for C_prime, delta_W_C in edge_dict.items():
+            if C_prime == C:
+                heappush(heap, (potential_function[W] + delta_W_C, W))
     while heap:
         _, W = heappop(heap)
         for V, v, C in apply_relax_lower(network, W, C):
             curr_VC = network.successor_edges[V][C] if C in network.successor_edges[V] else float(
                 "inf")
             if v < curr_VC:
-                network.insert_ordinary_edge(V, v, C)
+                network.insert_ordinary_edge(V, C, v)
             new_key = potential_function[V] + min(v, curr_VC)
             flag = False
             for _, V_prime in heap:
@@ -72,15 +75,16 @@ def close_relax_lower(network, potential_function, C):
 
 
 def apply_upper(network, C):
-    A, x, y, C = get_everything(C)
-    for V, v, C in network.ordinary_edges:
-        original_weight = network.successor_edges[V][A]
-        if v < (y - x):
-            new_weight = min(original_weight, -x)
-        else:
-            new_weight = min(original_weight, v - y)
+    A, x, y, C = network.contingent_links[C]
+    for V, edge_dict in enumerate(network.ol_edges):
+        for C, v in edge_dict.items():
+            original_weight = network.successor_edges[V][A]
+            if v < (y - x):
+                new_weight = min(original_weight, -x)
+            else:
+                new_weight = min(original_weight, v - y)
 
-        network.insert_or_update_ordinary_edge(V, new_weight, A)
+            network.insert_ordinary_edge(V, A, new_weight)
     return network
 
 
@@ -92,31 +96,32 @@ def update_potential(network, potential_function, activation_point):
         min_heap, (activation_point, updated_potential_function[activation_point]))
 
 
-def get_everything(S):
-    return 0, 0, 0, 0
 
 
 def cairo_et_al_2018(network):
-    potential_function = init_potential(network.lo)
+    potential_function = init_potential(network.ol_edges)
     if negative_cycle(network, potential_function) == False:
         return False
     contingent_links = network.contingent_links
     S = deque()
-    S.append(contingent_links[randint(0, len(contingent_links) - 1)])
+    idx = randint(0, len(contingent_links) - 1)
+    S.append(contingent_links[idx])
     while S:
         # should it be S[0]?
-        A, x, y, C = get_everything(S[-1])
+        A, x, y, C = S[-1]
         network = close_relax_lower(network, potential_function, C)
         network = apply_upper(network, C)
         # fix the next line
         potential_function = update_potential(
-            network.lo, potential_function, A)
+            network.ol_edges, potential_function, A)
         if negative_cycle(network, potential_function) == False:
             return False
 
         flag = False
-        for C_prime in contingent_links:
-            A_prime, _, _, _ = get_everything(C_prime)
+        for i in range(len(contingent_links)):
+            if contingent_links[i] == False:
+                continue
+            A_prime, _, _, C_prime = contingent_links[i]
             if network.successor_edges[A_prime][C] < y - x:
                 flag = True
             if flag:
@@ -124,9 +129,9 @@ def cairo_et_al_2018(network):
                     if C_prime == C_alt:
                         return False
 
-                S.append(C_prime)
+                S.append(contingent_links[C_prime])
         if not flag:
-            contingent_links = contingent_links.pop(C)
+            contingent_links[C] = False
             S.pop()
             if contingent_links and not S:
                 S.append(contingent_links[0])
