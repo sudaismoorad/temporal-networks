@@ -216,7 +216,7 @@ f = FileReader()
 
 stn = f.read_file("../sample_stnus/dc-2.stnu")
 # stn.visualize()
-
+# print(bellman_ford(stn))
 # print(johnson(stn))
 # fast_dispatch = Dispatch.luke_dispatch(stn)
 # print(fast_dispatch)
@@ -228,3 +228,4 @@ print(stn)
 
 dc = dc_cairo_et_al_2018(stn)
 print(dc)
+print(stn)

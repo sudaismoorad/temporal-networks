@@ -6,6 +6,7 @@ class Incremental:
 
     @staticmethod
     def update_potential_function(network, src_idx, potential_function, backward=False):
+        # small fixes TBD
         updated_potential_function = deepcopy(potential_function)
         # 0 equals not yet in queue, 1 equals in queue, 2 equals already popped from queue
         in_queue = [0 for i in range(len(potential_function))]

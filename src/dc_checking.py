@@ -35,8 +35,10 @@ def negative_cycle(network, potential_function):
 def apply_relax_lower(network, W, C):
     delta_W_C = network.successor_edges[W][C] if C in network.successor_edges[W] else float(
         "inf")
+    
     edges = set()
     _, x, y, _ = network.contingent_links[C]
+    
     if delta_W_C >= (y - x):
         pass
     elif network.contingent_links[W] != False:
@@ -53,16 +55,19 @@ def apply_relax_lower(network, W, C):
 
 def close_relax_lower(network, potential_function, C):
     min_heap = []
+    NOT_YET_IN_QUEUE, IN_QUEUE, POPPED_OFF = 0, 1, 2
+    in_queue = [NOT_YET_IN_QUEUE for i in range(len(potential_function))]
+
     for W, edge_dict in enumerate(network.ol_edges):
         for C_prime, delta_W_C in edge_dict.items():
             if C_prime == C:
+                in_queue[W] = IN_QUEUE
                 heappush(min_heap, (potential_function[W] + delta_W_C, W))
     counter = 0
     while min_heap:
-        counter += 1
-        print(counter)
+        
         _, W = heappop(min_heap)
-
+        in_queue[W] = POPPED_OFF
         for (V, v, C) in apply_relax_lower(network, W, C):
             curr_VC = network.successor_edges[V][C] if C in network.successor_edges[V] else float(
                 "inf")
@@ -70,27 +75,28 @@ def close_relax_lower(network, potential_function, C):
                 network.insert_ordinary_edge(V, C, v)
             new_key = potential_function[V] + min(v, curr_VC)
 
-            # use the in_queue trick here as well
-            flag = False
-            for i, (_, V_prime) in enumerate(min_heap):
-                if V_prime == V:
-                    flag = True
-                    idx = i
-                    node = min_heap[idx][1]
-                    min_heap.pop(idx)
-                    heappush(min_heap, (new_key, node))
-                    heapify(min_heap)
+            if in_queue[V] == IN_QUEUE:
+                for i, (_, node) in enumerate(min_heap):
+                    if node == V:
+                        idx = i
+                node = min_heap[idx][1]
+                min_heap.pop(idx)
+                heappush(min_heap, (new_key, node))
+                heapify(min_heap)
+            elif in_queue[V] == NOT_YET_IN_QUEUE:
 
-            if not flag:
                 heappush(min_heap, (new_key, V))
+                in_queue[V] = IN_QUEUE
     return network
 
 
 def apply_upper(network, C):
     A, x, y, C = network.contingent_links[C]
     insert_edges = []
-    for V, edge_dict in enumerate(network.ol_edges):
-        for C, v in edge_dict.items():
+    for V, edge_dict in enumerate(network.successor_edges):
+        for D, v in edge_dict.items():
+            if D != C:
+                continue
             if A in network.successor_edges[V]:
                 original_weight = network.successor_edges[V][A]
             else:
@@ -107,7 +113,7 @@ def apply_upper(network, C):
 
 def update_potential(network, potential_function, activation_point):
     updated_potential_function = deepcopy(potential_function)
-    # do we not need to look at the POPPED_OFF case?
+
     NOT_YET_IN_QUEUE, IN_QUEUE, POPPED_OFF = 0, 1, 2
     in_queue = [NOT_YET_IN_QUEUE for i in range(len(potential_function))]
 
@@ -131,13 +137,12 @@ def update_potential(network, potential_function, activation_point):
                         for i, (_, node) in enumerate(min_heap):
                             if node == V:
                                 idx = i
-                        node = min_heap[idx][1]
                         min_heap.pop(idx)
-                        heappush(min_heap, (new_key, node))
+                        heappush(min_heap, (new_key, V))
                         heapify(min_heap)
-                    else:
+                    elif in_queue[V] == NOT_YET_IN_QUEUE:
                         heappush(
-                            min_heap, (potential_function[V] - updated_potential_function[V], V))
+                             min_heap, (new_key, V))
                         in_queue[V] = IN_QUEUE
 
     return updated_potential_function
@@ -145,9 +150,10 @@ def update_potential(network, potential_function, activation_point):
 
 def cairo_et_al_2018(network):
     potential_function = init_potential(network.ol_edges)
-
+    print(potential_function)
     if negative_cycle(network, potential_function):
         return False
+
     contingent_links = network.contingent_links
     S = deque()
     # this idx could have a false, choose in a smarter way
@@ -155,19 +161,24 @@ def cairo_et_al_2018(network):
     while contingent_links[idx] == False:
         idx = randint(0, len(contingent_links) - 1)
     S.append(contingent_links[idx])
+    
     while S:
+        
         # should it be S[0]?
         A, x, y, C = S[-1]
-        print("wtf")
+        
+        print("C:", C)
         network = close_relax_lower(network, potential_function, C)
-        print("one")
+        print(network)
         network = apply_upper(network, C)
-        print("two")
+        print(network)
         # fix the next line
         potential_function = update_potential(
             network, potential_function, A)
-        print("wtf")
+        print(potential_function)
+        
         if negative_cycle(network, potential_function):
+            print("noo")
             return False
 
         # use the in_queue strategy to make this constant time
@@ -177,18 +188,23 @@ def cairo_et_al_2018(network):
             if contingent_links[i] == False:
                 continue
             A_prime, _, _, C_prime = contingent_links[i]
-            if network.successor_edges[A_prime][C] < y - x:
+            weight = network.successor_edges[A_prime][C] if C in network.successor_edges[A_prime] else float("inf")
+            if weight < y - x:
+                print(C_prime)
                 flag = True
-            if flag:
-                for C_alt in S:
-                    if C_prime == C_alt:
-                        return False
-
-                S.append(contingent_links[C_prime])
-        if not flag:
+                break
+        if flag:
+            for C_alt in S:
+                if C_prime == C_alt[3]:
+                    return False
+            S.append(contingent_links[C_prime])
+        else:    
             contingent_links[C] = False
-            S.pop()
-            if contingent_links and not S:
-                S.append(contingent_links[0])
+            S.pop() 
+            if not S:
+                for i in range(len(contingent_links)):
+                    if contingent_links[i] != False:
+                        S.append(contingent_links[i])
+                        break
 
     return True

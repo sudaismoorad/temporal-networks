@@ -1,3 +1,7 @@
+import matplotlib.pyplot as plt
+import networkx as nx
+
+
 class STNU:
 
     def __init__(self, successor_edges=True, predecessor_edges=True):
@@ -42,7 +46,7 @@ class STNU:
             self.successor_edges[tp1_idx][tp2_idx] = int(weight)
         if self.predecessor_edges is not None:
             self.predecessor_edges[tp2_idx][tp1_idx] = int(weight)
-        self.ou_edges[tp1_idx][tp2_idx] = int(weight)
+        # self.ou_edges[tp1_idx][tp2_idx] = int(weight)
         self.ol_edges[tp1_idx][tp2_idx] = int(weight)
 
     # def insert_or_update_ordinary_edge(self, tp1, tp2, weight):
@@ -53,3 +57,20 @@ class STNU:
     #         if tp2_idx in self.successor_edges[tp1_idx]:
     #             self.successor_edges[tp1_idx][tp2_idx] = int(weight)
     #         else:
+
+    def visualize(self):
+        G = nx.DiGraph()
+        G.add_nodes_from(self.names_list)
+        for node_idx, edge_dict in enumerate(self.ou_edges):
+            for successor_idx, weight in edge_dict.items():
+                G.add_edge(
+                    self.names_list[node_idx], self.names_list[successor_idx], weight=weight)
+        pos = nx.shell_layout(G)
+        nx.draw_networkx_nodes(G, pos, node_size=700)
+        nx.draw_networkx_edges(G, pos, arrowstyle="->", arrowsize=20, width=6)
+        labels = nx.get_edge_attributes(G, 'weight')
+        nx.draw_networkx_edge_labels(G, pos, edge_labels=labels)
+        nx.draw_networkx_labels(G, pos, font_size=20, font_family='sans-serif')
+
+        plt.axis('off')
+        plt.show()
