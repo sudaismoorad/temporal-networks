@@ -5,6 +5,35 @@ import networkx as nx
 class STNU:
 
     def __init__(self, successor_edges=True, predecessor_edges=True):
+        """
+        -------------------------------------------------
+        A class to represent a Simple Temporal Network
+        -------------------------------------------------
+        Attributes
+        ----------
+        names_dict : dict[name: index]
+            A dictionary that maps the name of the node to its index
+        names_list : List[Int]
+            A list that maps the numerical index of a node to its name
+        successor_edges : List[Dict[index:weight]]
+            A list of dicts of ordinary edges. The list at index i of this attribute is
+            the list of edges of the i-th node. Each edge is represented by a tuple - the
+            first element of the tuple is the j-th node that the i-th node is connected to
+            and the second element is the weight/distance between the i-th and j-th nodes
+        n : int
+            Number of nodes in the STN
+        ou_edges : List[Dict[index:weight]]
+            A list of dicts of ordinary and upper-case edges
+        ol_edges : List[Dict[index:weight]]
+            A list of dicts of ordinary and lower-case edges
+        contingent_links: List[4-Tuple(A, x, y, C)]
+            A list of contingent links. C is the contingent time point, A is its activation
+            time point, x is the lower case edge weight and y is the upper case edge weight
+        activation_point: List[List[Boolean]]
+            activation_point[i][j] returns True if i is the activation point of j;
+            otherwise it returns False
+        ---------------------------------------------------
+        """
         self.names_dict = {}
         self.names_list = []
         self.successor_edges = [] if successor_edges else None
@@ -46,10 +75,12 @@ class STNU:
             self.successor_edges[tp1_idx][tp2_idx] = int(weight)
         if self.predecessor_edges is not None:
             self.predecessor_edges[tp2_idx][tp1_idx] = int(weight)
-        # self.ou_edges[tp1_idx][tp2_idx] = int(weight)
+
+        self.ou_edges[tp1_idx][tp2_idx] = int(weight)
         self.ol_edges[tp1_idx][tp2_idx] = int(weight)
 
     def visualize(self):
+        # need to add contingent links
         G = nx.DiGraph()
         G.add_nodes_from(self.names_list)
         for node_idx, edge_dict in enumerate(self.ou_edges):

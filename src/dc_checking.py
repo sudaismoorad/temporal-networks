@@ -164,12 +164,10 @@ def cairo_et_al_2018(network):
 
     while S:
 
-        # should it be S[0]?
         A, x, y, C = S[-1]
         network = close_relax_lower(network, potential_function, C)
         network = apply_upper(network, C)
 
-        # fix the next line
         potential_function = update_potential(
             network, potential_function, A)
 
@@ -189,8 +187,8 @@ def cairo_et_al_2018(network):
                 flag = True
                 break
         if flag:
-            for C_alt in S:
-                if C_prime == C_alt[3]:
+            for _, _, _, C_alt in S:
+                if C_prime == C_alt:
                     return False
             S.append(contingent_links[C_prime])
         else:
