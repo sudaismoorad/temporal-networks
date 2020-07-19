@@ -212,19 +212,19 @@ class FileReader:
         return network
 
 
-f = FileReader()
+# f = FileReader()
 
-stn = f.read_file("../sample_stnus/dc-200-4.stnu")
-# stn.visualize()
-# print(bellman_ford(stn))
-# print(johnson(stn))
-# fast_dispatch = Dispatch.luke_dispatch(stn)
-# print(fast_dispatch)
-# potential_function = bellman_ford(stn)
-# disp = Dispatchability.greedy_execute(stn, potential_function)
-# print("disp", disp)
+# stn = f.read_file("../sample_stnus/dc-200-4.stnu")
+# # stn.visualize()
+# # print(bellman_ford(stn))
+# # print(johnson(stn))
+# # fast_dispatch = Dispatch.luke_dispatch(stn)
+# # print(fast_dispatch)
+# # potential_function = bellman_ford(stn)
+# # disp = Dispatchability.greedy_execute(stn, potential_function)
+# # print("disp", disp)
 
-print(stn)
+# print(stn)
 
-dc = dc_cairo_et_al_2018(stn)
-print(dc)
+# dc = dc_cairo_et_al_2018(stn)
+# print(dc)
