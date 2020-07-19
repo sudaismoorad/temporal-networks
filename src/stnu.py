@@ -49,15 +49,6 @@ class STNU:
         # self.ou_edges[tp1_idx][tp2_idx] = int(weight)
         self.ol_edges[tp1_idx][tp2_idx] = int(weight)
 
-    # def insert_or_update_ordinary_edge(self, tp1, tp2, weight):
-    #     tp1_idx = self.names_dict[tp1] if type(tp1) == str else tp1
-    #     tp2_idx = self.names_dict[tp2] if type(tp2) == str else tp2
-
-    #     if self.successor_edges is not None:
-    #         if tp2_idx in self.successor_edges[tp1_idx]:
-    #             self.successor_edges[tp1_idx][tp2_idx] = int(weight)
-    #         else:
-
     def visualize(self):
         G = nx.DiGraph()
         G.add_nodes_from(self.names_list)

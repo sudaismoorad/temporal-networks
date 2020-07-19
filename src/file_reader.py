@@ -202,7 +202,7 @@ class FileReader:
                 elif state == 'LINKS':
                     weights = line.split()
                     activation_time_point = network.names_dict[weights[0]]
-                    duration = (int(weights[1]), int(weights[2]))
+                    duration = (int(weights[1]), - int(weights[2]))
                     contingent_time_point = network.names_dict[weights[3]]
                     network.contingent_links[contingent_time_point] = (
                         activation_time_point, duration[0], duration[1], contingent_time_point)
@@ -210,21 +210,3 @@ class FileReader:
                     network.ol_edges[activation_time_point][contingent_time_point] = duration[0]
                     network.ou_edges[activation_time_point][contingent_time_point] = duration[1]
         return network
-
-
-# f = FileReader()
-
-# stn = f.read_file("../sample_stnus/dc-200-4.stnu")
-# # stn.visualize()
-# # print(bellman_ford(stn))
-# # print(johnson(stn))
-# # fast_dispatch = Dispatch.luke_dispatch(stn)
-# # print(fast_dispatch)
-# # potential_function = bellman_ford(stn)
-# # disp = Dispatchability.greedy_execute(stn, potential_function)
-# # print("disp", disp)
-
-# print(stn)
-
-# dc = dc_cairo_et_al_2018(stn)
-# print(dc)

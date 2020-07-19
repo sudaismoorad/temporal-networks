@@ -35,10 +35,10 @@ def negative_cycle(network, potential_function):
 def apply_relax_lower(network, W, C):
     delta_W_C = network.successor_edges[W][C] if C in network.successor_edges[W] else float(
         "inf")
-    
+
     edges = set()
     _, x, y, _ = network.contingent_links[C]
-    
+
     if delta_W_C >= (y - x):
         pass
     elif network.contingent_links[W] != False:
@@ -64,7 +64,7 @@ def close_relax_lower(network, potential_function, C):
             if C_prime == C:
                 in_queue[W] = IN_QUEUE
                 heappush(min_heap, (potential_function[W] + delta_W_C, W))
-    
+
     while min_heap:
         _, W = heappop(min_heap)
         in_queue[W] = POPPED_OFF
@@ -143,7 +143,7 @@ def update_potential(network, potential_function, activation_point):
                         in_queue[V] = POPPED_OFF
                     elif in_queue[V] == NOT_YET_IN_QUEUE:
                         heappush(
-                             min_heap, (new_key, V))
+                            min_heap, (new_key, V))
                         in_queue[V] = IN_QUEUE
 
     return updated_potential_function
@@ -156,27 +156,23 @@ def cairo_et_al_2018(network):
 
     contingent_links = network.contingent_links
     S = deque()
-    # this idx could have a false, choose in a smarter way
+
     idx = randint(0, len(contingent_links) - 1)
     while contingent_links[idx] == False:
         idx = randint(0, len(contingent_links) - 1)
     S.append(contingent_links[idx])
-    
+
     while S:
-        
+
         # should it be S[0]?
         A, x, y, C = S[-1]
-        
-    
         network = close_relax_lower(network, potential_function, C)
-     
         network = apply_upper(network, C)
-      
+
         # fix the next line
         potential_function = update_potential(
             network, potential_function, A)
-     
-        
+
         if negative_cycle(network, potential_function):
             return False
 
@@ -187,7 +183,8 @@ def cairo_et_al_2018(network):
             if contingent_links[i] == False:
                 continue
             A_prime, _, _, C_prime = contingent_links[i]
-            weight = network.successor_edges[A_prime][C] if C in network.successor_edges[A_prime] else float("inf")
+            weight = network.successor_edges[A_prime][C] if C in network.successor_edges[A_prime] else float(
+                "inf")
             if weight < y - x:
                 flag = True
                 break
@@ -196,9 +193,9 @@ def cairo_et_al_2018(network):
                 if C_prime == C_alt[3]:
                     return False
             S.append(contingent_links[C_prime])
-        else:    
+        else:
             contingent_links[C] = False
-            S.pop() 
+            S.pop()
             if not S:
                 for i in range(len(contingent_links)):
                     if contingent_links[i] != False:
