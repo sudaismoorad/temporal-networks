@@ -214,7 +214,7 @@ class FileReader:
 
 f = FileReader()
 
-stn = f.read_file("../sample_stnus/dc-2.stnu")
+stn = f.read_file("../sample_stnus/dc-200-4.stnu")
 # stn.visualize()
 # print(bellman_ford(stn))
 # print(johnson(stn))
@@ -228,4 +228,3 @@ print(stn)
 
 dc = dc_cairo_et_al_2018(stn)
 print(dc)
-print(stn)

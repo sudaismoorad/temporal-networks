@@ -45,11 +45,12 @@ def apply_relax_lower(network, W, C):
         A_W, x_W, _, _ = network.contingent_links[W]
         edges.add((A_W, x_W + delta_W_C, C))
     else:
-        for V, edge_dict in enumerate(network.ol_edges):
-            for W, delta_V_W in edge_dict.items():
-                if V == C:
+        for P, edge_dict in enumerate(network.ol_edges):
+            for Q, delta_P_Q in edge_dict.items():
+                if P == C:
                     continue
-                edges.add((V, delta_V_W + delta_W_C, C))
+                if W == Q:
+                    edges.add((P, delta_P_Q + delta_W_C, C))
     return edges
 
 
@@ -63,12 +64,12 @@ def close_relax_lower(network, potential_function, C):
             if C_prime == C:
                 in_queue[W] = IN_QUEUE
                 heappush(min_heap, (potential_function[W] + delta_W_C, W))
-    counter = 0
+    
     while min_heap:
-        
         _, W = heappop(min_heap)
         in_queue[W] = POPPED_OFF
-        for (V, v, C) in apply_relax_lower(network, W, C):
+        result = apply_relax_lower(network, W, C)
+        for (V, v, C) in result:
             curr_VC = network.successor_edges[V][C] if C in network.successor_edges[V] else float(
                 "inf")
             if v < curr_VC:
@@ -84,7 +85,6 @@ def close_relax_lower(network, potential_function, C):
                 heappush(min_heap, (new_key, node))
                 heapify(min_heap)
             elif in_queue[V] == NOT_YET_IN_QUEUE:
-
                 heappush(min_heap, (new_key, V))
                 in_queue[V] = IN_QUEUE
     return network
@@ -140,6 +140,7 @@ def update_potential(network, potential_function, activation_point):
                         min_heap.pop(idx)
                         heappush(min_heap, (new_key, V))
                         heapify(min_heap)
+                        in_queue[V] = POPPED_OFF
                     elif in_queue[V] == NOT_YET_IN_QUEUE:
                         heappush(
                              min_heap, (new_key, V))
@@ -150,7 +151,6 @@ def update_potential(network, potential_function, activation_point):
 
 def cairo_et_al_2018(network):
     potential_function = init_potential(network.ol_edges)
-    print(potential_function)
     if negative_cycle(network, potential_function):
         return False
 
@@ -167,18 +167,17 @@ def cairo_et_al_2018(network):
         # should it be S[0]?
         A, x, y, C = S[-1]
         
-        print("C:", C)
+    
         network = close_relax_lower(network, potential_function, C)
-        print(network)
+     
         network = apply_upper(network, C)
-        print(network)
+      
         # fix the next line
         potential_function = update_potential(
             network, potential_function, A)
-        print(potential_function)
+     
         
         if negative_cycle(network, potential_function):
-            print("noo")
             return False
 
         # use the in_queue strategy to make this constant time
@@ -190,7 +189,6 @@ def cairo_et_al_2018(network):
             A_prime, _, _, C_prime = contingent_links[i]
             weight = network.successor_edges[A_prime][C] if C in network.successor_edges[A_prime] else float("inf")
             if weight < y - x:
-                print(C_prime)
                 flag = True
                 break
         if flag:
