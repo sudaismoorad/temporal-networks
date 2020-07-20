@@ -4,7 +4,8 @@ from dijkstra import Dijkstra
 from johnson import Johnson
 from dispatch import Dispatch
 from tarjan import Tarjan
-from dc_checking import *
+from dispatchability import Dispatchability
+from dc_checking import cairo_et_al_2018
 
 
 __all__ = ['floyd_warshall', 'bellman_ford',
@@ -31,6 +32,14 @@ def dispatch(network):
     return Dispatch.fast_dispatch(network)
 
 
+def slow_dispatch(network):
+    return Dispatch.slow_dispatch(network)
+
+
+def luke_dispatch(network):
+    return Dispatch.luke_dispatch(network)
+
+
 def dc_cairo_et_al_2018(network):
     return cairo_et_al_2018(network)
 
@@ -38,3 +47,8 @@ def dc_cairo_et_al_2018(network):
 def tarjan(network):
     t = Tarjan(network)
     return t.tarjan()
+
+
+def greedy_execute(network):
+    potential_function = bellman_ford(network)
+    return Dispatchability.greedy_execute(network, potential_function)

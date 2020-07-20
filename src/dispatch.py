@@ -241,7 +241,7 @@ class Dispatch:
         potential_function = BellmanFord.bellman_ford_wrapper(network)
 
         if potential_function == False:
-            return False, False
+            return False
 
         # grabbing the source index
         # this does not need to be a matrix

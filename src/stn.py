@@ -247,9 +247,10 @@ class STN:
                     self.names_list[node_idx], self.names_list[successor_idx], weight=weight)
         pos = nx.shell_layout(G)
         nx.draw_networkx_nodes(G, pos, node_size=700)
-        nx.draw_networkx_edges(G, pos, arrowstyle="->", arrowsize=20, width=6)
+        nx.draw_networkx_edges(
+            G, pos, arrowstyle="->", connectionstyle='arc3, rad = 0.1', arrowsize=20, width=3, edge_color='b', alpha=0.5)
         labels = nx.get_edge_attributes(G, 'weight')
-        nx.draw_networkx_edge_labels(G, pos, edge_labels=labels)
+        nx.draw_networkx_edge_labels(G, pos, edge_labels=labels, label_pos=0.3)
         nx.draw_networkx_labels(G, pos, font_size=20, font_family='sans-serif')
 
         plt.axis('off')
