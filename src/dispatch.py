@@ -257,7 +257,7 @@ class Dispatch:
         # tarjan returns sorted rigid components
         rigid_components = tarjan(
             predecessor_graph, potential_function)
-
+        
         # making a list of leaders
         list_of_leaders = []
         for i in range(len(rigid_components)):
@@ -266,13 +266,13 @@ class Dispatch:
         # creating the doubly linked chain
         doubly_linked_chain = get_doubly_linked_chain(
             rigid_components, network)
-
+        
         # Creating the contracted graph with the only time-points being the leader
         # For every edge going from an RC to another RC, an equivalent edge is
         # inserted from one leader to another
         CONTR_G = connect_leaders(
             network, list_of_leaders, rigid_components, potential_function)
-
+        
         # For every leader A
         for A in list_of_leaders:
             # Get the index of A in the contracted graph

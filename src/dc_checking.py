@@ -11,7 +11,20 @@ __all__ = ["morris_2014", "cairo_et_al_2018"]
 def morris_2014():
     pass
 
-
+"""
+-------------------------------------------------------------------------
+A method that calculates the initial potential function using the LO-graph.
+-------------------------------------------------------------------------
+Parameters
+----------
+ol_edges: List[Dictionary]
+    A list of dictionaries representing the ordinary and lower-case edges.
+Returns
+-------
+potential_function: List[int]
+    An array of length N representing the shortest distances from an external source.
+    Involves N - 1 iterations of Bellman Ford.
+"""
 def init_potential(ol_edges):
     N = len(ol_edges)
     potential_function = [0 for _ in range(N)]
@@ -23,7 +36,22 @@ def init_potential(ol_edges):
 
     return potential_function
 
-
+"""
+-------------------------------------------------------------------------
+A method that checks if there is a negative cycle in the LO-graph.
+-------------------------------------------------------------------------
+Parameters
+----------
+network: STNU
+    A Simple Temporal Network with Uncertainity.
+potential_function: List[int]
+    A candidate potential function for the LO-graph.
+Returns
+-------
+bool:
+    True, if a negative cycle is found. False, if the potentail function is valid.
+    Involves the Nth iteration of Bellman Ford.
+"""
 def negative_cycle(network, potential_function):
     for V, edge_dict in enumerate(network.ol_edges):
         for W, w in edge_dict.items():
@@ -31,7 +59,24 @@ def negative_cycle(network, potential_function):
                 return True
     return False
 
-
+"""
+-------------------------------------------------------------------------
+A method that generates the set of edges to be added to the network as a 
+reult of RELAX- and Lower- rules being applied.
+-------------------------------------------------------------------------
+Parameters
+----------
+network: STNU
+    A Simple Temporal Network with Uncertainity.
+W: int
+    The index of a time-point in the STNU.
+C: int
+    The index of a contingent time-point in the STNU.
+Returns
+-------
+edges => set((time-point, weight, time-point)): set((int, int, int))
+    A set of edges to be added to the network.
+"""
 def apply_relax_lower(network, W, C):
     delta_W_C = network.successor_edges[W][C] if C in network.successor_edges[W] else float(
         "inf")
@@ -53,7 +98,25 @@ def apply_relax_lower(network, W, C):
                     edges.add((P, delta_P_Q + delta_W_C, C))
     return edges
 
-
+"""
+-------------------------------------------------------------------------
+A method that adds all the edges terminating at the contingent time-point 
+as a result of the Relax- and Lower- rules being applied.
+-------------------------------------------------------------------------
+Parameters
+----------
+network: STNU
+    A Simple Temporal Network with Uncertainity.
+potential_function: List[int]
+    A potential function for the LO-graph.
+C: int
+    The index of a contingent time-point in the STNU.
+Returns
+-------
+network: STNU
+    A modified network with all incoming edges to the contingent 
+    time-point being added.
+"""
 def close_relax_lower(network, potential_function, C):
     min_heap = []
     NOT_YET_IN_QUEUE, IN_QUEUE, POPPED_OFF = 0, 1, 2
@@ -89,7 +152,23 @@ def close_relax_lower(network, potential_function, C):
                 in_queue[V] = IN_QUEUE
     return network
 
-
+"""
+-------------------------------------------------------------------------
+A method that generates and adds all the edges terminating at the 
+activation time-point as a result of the Upper- rule being applied.
+-------------------------------------------------------------------------
+Parameters
+----------
+network: STNU
+    A Simple Temporal Network with Uncertainity.
+C: int
+    The index of a contingent time-point in the STNU.
+Returns
+-------
+network: STNU
+    A modified network with all incoming edges to the activation 
+    time-point being added.
+"""
 def apply_upper(network, C):
     A, x, y, C = network.contingent_links[C]
     insert_edges = []
@@ -110,7 +189,24 @@ def apply_upper(network, C):
         network.insert_ordinary_edge(V, A, new_weight)
     return network
 
-
+"""
+-------------------------------------------------------------------------
+A method that updates the potential function to reflect the new_edges.
+-------------------------------------------------------------------------
+Parameters
+----------
+network: STNU
+    A Simple Temporal Network with Uncertainity.
+potential_function: List[int]
+    A potential function for the LO-graph.
+C: int
+    The index of a contingent time-point in the STNU.
+Returns
+-------
+updated_potentail_function: List[int]
+    An updated potential function for the LO-graph. Involves N - 1 
+    iterations of Bellman Ford.
+"""
 def update_potential(network, potential_function, activation_point):
     updated_potential_function = deepcopy(potential_function)
 
@@ -148,7 +244,20 @@ def update_potential(network, potential_function, activation_point):
 
     return updated_potential_function
 
-
+"""
+-------------------------------------------------------------------------
+The main method for the RUL- DC-checking algorithm. Checks if a given STNU
+is dynamically controllable.
+-------------------------------------------------------------------------
+Parameters
+----------
+network: STNU
+    A Simple Temporal Network with Uncertainity.
+Returns
+-------
+bool:
+    True, if the network is dynamically controlled and False otherwise.
+"""
 def cairo_et_al_2018(network):
     potential_function = init_potential(network.ol_edges)
     if negative_cycle(network, potential_function):
@@ -192,12 +301,7 @@ def cairo_et_al_2018(network):
                     return False
             stack.append(contingent_links[i])
         else:
-            for C_idx in range(len(contingent_links)):
-                if contingent_links[C_idx] == False:
-                    continue
-                if contingent_links[C_idx][3] == C:
-                    break
-            contingent_links[C_idx] = False
+            contingent_links[C] = False
             stack.pop()
             if not stack:
                 for i in range(len(contingent_links)):
