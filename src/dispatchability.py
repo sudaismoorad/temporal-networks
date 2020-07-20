@@ -8,12 +8,12 @@ from copy import deepcopy
 import random
 from johnson import Johnson
 
+
 class Dispatchability:
 
     """
     The Dispatchibility class contains static methods relating to dispatchability.
     """
-
 
     @staticmethod
     def _get_predecessor_edges(stn, node_index):
@@ -34,8 +34,6 @@ class Dispatchability:
                 if v == node_index:
                     yield (u, delta)
 
-
-
     @staticmethod
     def _find_point_in_time_window(A, bounds, time):
         """
@@ -54,9 +52,6 @@ class Dispatchability:
             if lower_bound <= time and time <= upper_bound:
                 return A.pop(i)
 
-
-
-
     @staticmethod
     def _check_solution(stn, execution_times):
         """
@@ -72,9 +67,6 @@ class Dispatchability:
                 if execution_times[v]-time > delta:
                     return False
         return True
-
-
-
 
     @staticmethod
     def greedy_execute(stn, potential_function):
@@ -106,7 +98,6 @@ class Dispatchability:
             if flag:
                 start = node_idx
                 break
-        print(start)
         if start == -1:
             return False
         # variable names lifted from Muscettola, Morris, and Tsamardinos

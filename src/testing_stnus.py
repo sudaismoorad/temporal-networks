@@ -20,7 +20,7 @@ def test_cormen_et_al_2018(test_controllable, test_uncontrollable):
             if dc == True:
                 counter += 1
 
-        print(f"{counter}/{len(controllable_file_names)} tests successful!")
+        print(f"{counter}/{len(controllable_file_names)} tests passed!")
 
     def test_controllable_STNUs_return(time):
         return f"Testing controllable STNUs took {time} seconds"
@@ -36,7 +36,7 @@ def test_cormen_et_al_2018(test_controllable, test_uncontrollable):
             if dc == False:
                 counter += 1
 
-        print(f"{counter}/{len(uncontrollable_file_names)} tests successful")
+        print(f"{counter}/{len(uncontrollable_file_names)} tests passed!")
 
     def test_uncontrollable_STNUs_return(time):
         return f"Testing uncontrollable STNUs took {time} seconds"

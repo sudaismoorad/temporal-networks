@@ -27,7 +27,7 @@ def init_potential(ol_edges):
 def negative_cycle(network, potential_function):
     for V, edge_dict in enumerate(network.ol_edges):
         for W, w in edge_dict.items():
-            if potential_function[V] < (potential_function[W] - w):
+            if potential_function[V] < potential_function[W] - w:
                 return True
     return False
 
@@ -137,14 +137,14 @@ def update_potential(network, potential_function, activation_point):
                         for i, (_, node) in enumerate(min_heap):
                             if node == V:
                                 idx = i
-                        min_heap.pop(idx)
-                        heappush(min_heap, (new_key, V))
+                        min_heap[idx] = (new_key, V)
                         heapify(min_heap)
-                        in_queue[V] = POPPED_OFF
                     elif in_queue[V] == NOT_YET_IN_QUEUE:
                         heappush(
                             min_heap, (new_key, V))
                         in_queue[V] = IN_QUEUE
+                    # else:
+                    #     return False
 
     return updated_potential_function
 
@@ -155,16 +155,16 @@ def cairo_et_al_2018(network):
         return False
 
     contingent_links = network.contingent_links
-    S = deque()
+    stack = deque()
 
     idx = randint(0, len(contingent_links) - 1)
     while contingent_links[idx] == False:
         idx = randint(0, len(contingent_links) - 1)
-    S.append(contingent_links[idx])
+    stack.append(contingent_links[idx])
 
-    while S:
+    while stack:
 
-        A, x, y, C = S[-1]
+        A, x, y, C = stack[-1]
         network = close_relax_lower(network, potential_function, C)
         network = apply_upper(network, C)
 
@@ -187,17 +187,22 @@ def cairo_et_al_2018(network):
                 flag = True
                 break
         if flag:
-            for _, _, _, C_alt in S:
+            for _, _, _, C_alt in stack:
                 if C_prime == C_alt:
                     return False
-            S.append(contingent_links[C_prime])
+            stack.append(contingent_links[i])
         else:
-            contingent_links[C] = False
-            S.pop()
-            if not S:
+            for C_idx in range(len(contingent_links)):
+                if contingent_links[C_idx] == False:
+                    continue
+                if contingent_links[C_idx][3] == C:
+                    break
+            contingent_links[C_idx] = False
+            stack.pop()
+            if not stack:
                 for i in range(len(contingent_links)):
                     if contingent_links[i] != False:
-                        S.append(contingent_links[i])
+                        stack.append(contingent_links[i])
                         break
 
     return True

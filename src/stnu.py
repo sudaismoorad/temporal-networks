@@ -83,15 +83,38 @@ class STNU:
         # need to add contingent links
         G = nx.DiGraph()
         G.add_nodes_from(self.names_list)
-        for node_idx, edge_dict in enumerate(self.ou_edges):
+
+        ordinary_edges, lower_edges, upper_edges = [], [], []
+        for node_idx, edge_dict in enumerate(self.successor_edges):
             for successor_idx, weight in edge_dict.items():
                 G.add_edge(
                     self.names_list[node_idx], self.names_list[successor_idx], weight=weight)
+                ordinary_edges.append(
+                    (self.names_list[node_idx], self.names_list[successor_idx]))
+
+        for i in range(len(self.contingent_links)):
+            if self.contingent_links[i] == False:
+                continue
+            activation_point, x, y, contingent_point = self.contingent_links[i]
+            G.add_edge(self.names_list[activation_point],
+                       self.names_list[contingent_point], weight=x)
+            G.add_edge(self.names_list[contingent_point],
+                       self.names_list[activation_point], weight=-y)
+            lower_edges.append(
+                (self.names_list[activation_point], self.names_list[contingent_point]))
+            upper_edges.append(
+                (self.names_list[contingent_point], self.names_list[activation_point]))
+
         pos = nx.shell_layout(G)
         nx.draw_networkx_nodes(G, pos, node_size=700)
-        nx.draw_networkx_edges(G, pos, arrowstyle="->", arrowsize=20, width=6)
+        nx.draw_networkx_edges(G, pos, arrowstyle="->",
+                               edgelist=ordinary_edges, connectionstyle='arc3, rad = 0.1', arrowsize=20, width=3, edge_color='r', alpha=0.5)
+        nx.draw_networkx_edges(G, pos, arrowstyle="->",
+                               edgelist=lower_edges, arrowsize=20, width=2, connectionstyle='arc3, rad = 0.1', edge_color='b', style="dashed", alpha=1)
+        nx.draw_networkx_edges(G, pos, arrowstyle="->",
+                               edgelist=upper_edges, arrowsize=20, width=2, connectionstyle='arc3, rad = 0.1', edge_color='g', style="dashed", alpha=1)
         labels = nx.get_edge_attributes(G, 'weight')
-        nx.draw_networkx_edge_labels(G, pos, edge_labels=labels)
+        nx.draw_networkx_edge_labels(G, pos, edge_labels=labels, label_pos=0.3)
         nx.draw_networkx_labels(G, pos, font_size=20, font_family='sans-serif')
 
         plt.axis('off')

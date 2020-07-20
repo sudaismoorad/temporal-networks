@@ -202,11 +202,11 @@ class FileReader:
                 elif state == 'LINKS':
                     weights = line.split()
                     activation_time_point = network.names_dict[weights[0]]
-                    duration = (int(weights[1]), - int(weights[2]))
+                    duration = (int(weights[1]), int(weights[2]))
                     contingent_time_point = network.names_dict[weights[3]]
                     network.contingent_links[contingent_time_point] = (
                         activation_time_point, duration[0], duration[1], contingent_time_point)
                     network.activation_point[activation_time_point][contingent_time_point] = True
                     network.ol_edges[activation_time_point][contingent_time_point] = duration[0]
-                    network.ou_edges[activation_time_point][contingent_time_point] = duration[1]
+                    network.ou_edges[activation_time_point][contingent_time_point] = - duration[1]
         return network

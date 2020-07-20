@@ -28,11 +28,13 @@ def johnson(network):
 
 
 def dispatch(network):
-    return Dispatch.slow_dispatch(network)
+    return Dispatch.fast_dispatch(network)
+
 
 def dc_cairo_et_al_2018(network):
     return cairo_et_al_2018(network)
-    
+
+
 def tarjan(network):
     t = Tarjan(network)
     return t.tarjan()

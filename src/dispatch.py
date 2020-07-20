@@ -194,7 +194,7 @@ def mark_dominating_edges(contracted_graph, leader, distances):
 
     delete_edges = set()
     predecessor_graph = make_pred_graph(contracted_graph, distances)
-    print(leader, predecessor_graph)
+
     LOOKING_FOR_NEGATIVE = 0
     FOUND_NEGATIVE = 1
     num_tps = predecessor_graph.num_tps()
@@ -213,7 +213,7 @@ def mark_dominating_edges(contracted_graph, leader, distances):
         while stack:
             node_idx, prev_node_idx, phase, min_dist, cur_dist = stack.pop()
             cur_dist += predecessor_graph.successor_edges[prev_node_idx][node_idx]
-            print(cur_dist, min_dist, phase)
+
             if phase == FOUND_NEGATIVE and cur_dist < 0:
                 delete_edges.add(node_idx)
             elif min_dist <= cur_dist and cur_dist >= 0:
@@ -297,7 +297,7 @@ class Dispatch:
                 if i not in delete_edges:
                     if distances[i] != float("inf"):
                         CONTR_G.insert_new_edge(A, i, distances[i])
-                else:
+                elif i in CONTR_G.successor_edges[A]:
                     CONTR_G.delete_edge(A, i)
 
         # Creating the final dispatchable stn with original time-points

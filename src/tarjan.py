@@ -41,14 +41,15 @@ class Tarjan:
         self.stack.append(idx)
         self.onStack[idx] = True
         self.ids[idx] = self.id
-        self.low[idx] = idx
+        self.low[idx] = self.id
         self.id += 1
 
         for target_idx in self.network.successor_edges[idx]:
             if self.ids[target_idx] == -1:
                 self._dfs(target_idx)
-            if self.onStack[target_idx]:
                 self.low[idx] = min(self.low[idx], self.low[target_idx])
+            elif self.onStack[target_idx]:
+                self.low[idx] = min(self.low[idx], self.ids[target_idx])
 
         if self.ids[idx] == self.low[idx]:
             while self.stack:
