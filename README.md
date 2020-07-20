@@ -7,7 +7,6 @@
 - [How to use it](#how-to-use-it)
   - [Simple Temporal Networks](#simple-temporal-network)
   - [Simple Temporal Networks with Uncertainty](#simple-temporal-network-with-uncertainty)
-- [Extra Information](#extra-information)
 - [TODO](#todo)
 
 ## Description
@@ -41,23 +40,43 @@ The STN class creates a Simple Temporal Network with the following algorithms:
 
 #### Algorithms we implemented
 
+All algorithms can be accessed by importing the stn_algorithms module as follows:
+```
+from stn_algorithms import *
+from stn import STN
+```
 1. Visualizing STNs: Calling the vizualize method in the STN class creates a matplotlib plot of
    the STN. To vizualize an STN simply call the method like this:
    ```
    stn.visualize()
    ```
 2. Consistency checking: Does an STN have a solution?
+  ```
+  stn.is_consistent()
+  ```
 3. Generating or incrementally updating solutions for STNs
+  ```
+  # add examples here
+  ```
 4. All-pairs, shortest-paths algorithms for STNs
+  ```
+  floyd_warshall(stn)
+  johnson(stn)
+  ```
 5. Algorithms associated with real-time execution of STNs (“dispatchability”)
+  ```
+  fast_dispatch(stn)
+  slow_dispatch(stn)
+  ```
 6. Generation of random STNs to support empirical evaluation
+  ```
+  generate_random_STNs(no_of_stns=5, max_no_of_nodes=20, max_weight=200, min_weight=-100)
+  ```
 7. Different kinds of “path-consistency” algorithms for STNs
+  ```
+  # add examples here
+  ```
 
-All algorithms can be accessed by importing the stn_algorithms module as follows:
-```
-from stn_algorithms import *
-# (add examples here)
-```
 
 #### Algorithms on STNs
 
