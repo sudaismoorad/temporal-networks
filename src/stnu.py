@@ -26,7 +26,7 @@ class STNU:
             A list of dicts of ordinary and upper-case edges
         ol_edges : List[Dict[index:weight]]
             A list of dicts of ordinary and lower-case edges
-        contingent_links: List[4-Tuple(A, x, y, C)]
+        contingent_links: List[4-Tuple(A, x, y, C) | False]
             A list of contingent links. C is the contingent time point, A is its activation
             time point, x is the lower case edge weight and y is the upper case edge weight
         activation_point: List[List[Boolean]]
