@@ -154,7 +154,7 @@ def mark_dominating_edges(contracted_graph, leader, distances):
 
     delete_edges = set()
     predecessor_graph = make_pred_graph(contracted_graph, distances)
-    print(leader, predecessor_graph)
+    # print(predecessor_graph)
 
     LOOKING_FOR_NEGATIVE = 0
     FOUND_NEGATIVE = 1
@@ -169,18 +169,22 @@ def mark_dominating_edges(contracted_graph, leader, distances):
             phase = FOUND_NEGATIVE
         stack = deque()
         for node_idx in predecessor_graph.successor_edges[successor_idx]:
+            min_dist = min(min_dist, predecessor_graph.successor_edges[leader][successor_idx])
             stack.append((node_idx, successor_idx, phase, min_dist, cur_dist))
         prev_node_idx = successor_idx
         while stack:
             node_idx, prev_node_idx, phase, min_dist, cur_dist = stack.pop()
             cur_dist += predecessor_graph.successor_edges[prev_node_idx][node_idx]
-
+            # print(leader, cur_dist, min_dist, phase, node_idx)
             if phase == FOUND_NEGATIVE and cur_dist < 0:
+                # print("beep1")
                 delete_edges.add(node_idx)
             elif min_dist <= cur_dist and cur_dist >= 0:
+                # print("beep2")
                 delete_edges.add(node_idx)
             elif phase == LOOKING_FOR_NEGATIVE and cur_dist < 0:
                 phase = FOUND_NEGATIVE
+            # print("check")
             min_dist = min(
                 min_dist, predecessor_graph.successor_edges[prev_node_idx][node_idx])
             if visited[node_idx]:
@@ -243,7 +247,7 @@ class Dispatch:
             # Run dijkstra to get the list of distances from the leader A
             distances = Dijkstra.dijkstra_wrapper(
                 CONTR_G, A)
-            print(A, distances)
+           
 
             for idx, val in CONTR_G.successor_edges[A].items():
                 weight = min(distances[idx], val)
@@ -251,7 +255,7 @@ class Dispatch:
 
             delete_edges = mark_dominating_edges(
                 CONTR_G, A, distances)
-            print(A, delete_edges)
+            
             # Delete the marked dominating edges
             for i in range(CONTR_G.num_tps()):
                 if i == A:
