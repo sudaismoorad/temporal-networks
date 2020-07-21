@@ -150,50 +150,11 @@ def creating_dispatchable_stn(APSP, contracted_graph, doubly_linked_chain):
     return DISPATCHABLE_STN
 
 
-# def mark_dominating_edges(contracted_graph, leader, distances):
-
-#     delete_edges = set()
-#     predecessor_graph = make_pred_graph(contracted_graph, distances)
-
-#     LOOKING_FOR_NEGATIVE = 0
-#     FOUND_NEGATIVE = 1
-#     num_tps = predecessor_graph.num_tps()
-#     visited = [False for _ in range(num_tps)]
-
-#     for successor_idx in predecessor_graph.successor_edges[leader]:
-#         phase = LOOKING_FOR_NEGATIVE
-#         min_dist = float("inf")
-#         cur_dist = predecessor_graph.successor_edges[leader][successor_idx]
-#         stack = deque()
-#         for node_idx in predecessor_graph.successor_edges[successor_idx]:
-#             stack.append((node_idx, successor_idx, phase, min_dist, cur_dist))
-#         prev_node_idx = successor_idx
-#         while stack:
-#             node_idx, prev_node_idx, phase, min_dist, cur_dist = stack.pop()
-#             cur_dist += predecessor_graph.successor_edges[prev_node_idx][node_idx]
-#             if phase == FOUND_NEGATIVE and cur_dist < 0:
-#                 if node_idx in contracted_graph.successor_edges[leader]:
-#                     delete_edges.add(node_idx)
-#             elif min_dist <= cur_dist and cur_dist >= 0:
-#                 if node_idx in contracted_graph.successor_edges[leader]:
-#                     delete_edges.add(node_idx)
-#             elif phase == LOOKING_FOR_NEGATIVE and cur_dist < 0:
-#                 phase = FOUND_NEGATIVE
-#             min_dist = min(
-#                 min_dist, predecessor_graph.successor_edges[prev_node_idx][node_idx])
-#             if visited[node_idx]:
-#                 break
-#             visited[node_idx] = True
-#             for node_successor_idx in predecessor_graph.successor_edges[node_idx]:
-#                 stack.append((node_successor_idx, node_idx,
-#                               phase, min_dist, cur_dist))
-
-#     return delete_edges
-
 def mark_dominating_edges(contracted_graph, leader, distances):
 
     delete_edges = set()
     predecessor_graph = make_pred_graph(contracted_graph, distances)
+    print(leader, predecessor_graph)
 
     LOOKING_FOR_NEGATIVE = 0
     FOUND_NEGATIVE = 1
@@ -257,7 +218,7 @@ class Dispatch:
         # tarjan returns sorted rigid components
         rigid_components = tarjan(
             predecessor_graph, potential_function)
-        
+
         # making a list of leaders
         list_of_leaders = []
         for i in range(len(rigid_components)):
@@ -266,13 +227,13 @@ class Dispatch:
         # creating the doubly linked chain
         doubly_linked_chain = get_doubly_linked_chain(
             rigid_components, network)
-        
+
         # Creating the contracted graph with the only time-points being the leader
         # For every edge going from an RC to another RC, an equivalent edge is
         # inserted from one leader to another
         CONTR_G = connect_leaders(
             network, list_of_leaders, rigid_components, potential_function)
-        
+
         # For every leader A
         for A in list_of_leaders:
             # Get the index of A in the contracted graph
@@ -282,6 +243,7 @@ class Dispatch:
             # Run dijkstra to get the list of distances from the leader A
             distances = Dijkstra.dijkstra_wrapper(
                 CONTR_G, A)
+            print(A, distances)
 
             for idx, val in CONTR_G.successor_edges[A].items():
                 weight = min(distances[idx], val)
@@ -289,6 +251,7 @@ class Dispatch:
 
             delete_edges = mark_dominating_edges(
                 CONTR_G, A, distances)
+            print(A, delete_edges)
             # Delete the marked dominating edges
             for i in range(CONTR_G.num_tps()):
                 if i == A:
@@ -306,7 +269,7 @@ class Dispatch:
 
         return DISPATCHABLE_STN
 
-    @staticmethod
+    @ staticmethod
     def slow_dispatch(network):
         # O(N^3) time, O(N^2) extra space
         if network.dist_up_to_date and network.distance_matrix:
@@ -368,7 +331,7 @@ class Dispatch:
 
         return s
 
-    @staticmethod
+    @ staticmethod
     def luke_dispatch(network):
         # O(N^3) time, O(N^2) extra space
         # compute distance matrix if not already computed and up-to-date
