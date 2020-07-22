@@ -10,7 +10,7 @@ STNU
 A0 C0 A1 C1 X
 # Ordinary Edges
 X 12 C0
-C1 11 C0
+C1 8 C0
 C0 -7 X
 C0 -1 C1
 # Contingent Links

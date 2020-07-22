@@ -8,8 +8,71 @@ from copy import deepcopy
 __all__ = ["morris_2014", "cairo_et_al_2018"]
 
 
-def morris_2014():
-    pass
+def morris_2014(graph, N):
+    network = deepcopy(graph)
+    N = network.num_tps()
+
+    def is_negative(node):
+        for _, w in network.predecessor_edges[node]:
+            if w < 0:
+                return True
+        return False
+
+    def is_unsuitable(node):
+        pass
+
+    def DC_backprop(src):
+        if ancestor[src] == src:
+            return False
+
+        if prior[src]:
+            return True
+
+        distances[src] = 0
+        for i in range(len(N)):
+            if i != src:
+                distances[i] = float("inf")
+
+        min_heap = []
+        for n1, e1 in network.predecessor_edges[src]:
+            distances[n1] = e1
+            heappush(min_heap, (e1, n1))
+
+        while min_heap:
+            _, u = heappop(min_heap)
+            # might not need distances... first ele is distance
+            if distances[u] >= 0:
+                network.insert_ordinary_edge(u, src, distances[u])
+                continue
+            # cache the negative nodes
+            if is_negative(u):
+                # change global states here
+                ancestor[u] = src
+                # what do they mean by prior here?
+                if DC_backprop(u) == False:
+                    return False
+            for v, e in network.predecessor_edges[src]:
+                if e < 0:
+                    continue
+                # what does it mean for e to be unsuitable
+                if negative_nodes(v):
+                    continue
+                new = distances[u] + e
+                if new < distances[v]:
+                    distances[v] = new
+                    heappush(min_heap, (distances[v], v))
+        prior[src] = True
+        return True
+
+    prior = [False for i in range(N)]
+    for idx, state in negative_nodes:
+        if state:
+            distances = [float("inf") for i in range(N)]
+            ancestor = [float("inf") for i in range(N)]
+            negative_nodes = [is_negative(node) for node in range(N)]
+            if DC_backprop(idx) == False:
+                return False
+    return True
 
 
 def init_potential(ol_edges):
@@ -277,15 +340,21 @@ def cairo_et_al_2018(network):
     while contingent_links[idx] == False:
         idx = randint(0, len(contingent_links) - 1)
     stack.append(contingent_links[idx])
-
+    # for i in range(len(contingent_links)):
+    #     if contingent_links[i]:
+    #         print(i, end=" ")
+    # print("")
     while stack:
 
         A, x, y, C = stack[-1]
+        # print(C, end=" ")
         network = close_relax_lower(network, potential_function, C)
         network = apply_upper(network, C)
 
         potential_function = update_potential(
             network, potential_function, A)
+
+        # print(True if init_potential(network.ol_edges) else False)
 
         if negative_cycle(network, potential_function):
             return False
