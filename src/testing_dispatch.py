@@ -7,11 +7,12 @@ from file_reader import FileReader
 
 def test_dispatch(test_fast, test_slow, test_luke):
     f = FileReader()
+    FILE_PATH = "../sample_stns"
 
     def test_fast_dispatch(file_names):
         counter = 0
         for file_name in file_names:
-            stn = f.read_file("../sample_stns/" + file_name)
+            stn = f.read_file(FILE_PATH + file_name)
             dispatchable_stn = dispatch(stn)
             try:
                 greedy_execute(dispatchable_stn)
@@ -27,7 +28,7 @@ def test_dispatch(test_fast, test_slow, test_luke):
     def test_slow_dispatch(file_names):
         counter = 0
         for file_name in file_names:
-            stn = f.read_file("../sample_stns/" + file_name)
+            stn = f.read_file(FILE_PATH + file_name)
             dispatchable_stn = slow_dispatch(stn)
             try:
                 greedy_execute(dispatchable_stn)
@@ -43,20 +44,20 @@ def test_dispatch(test_fast, test_slow, test_luke):
     def test_luke_dispatch(file_names):
         counter = 0
         for file_name in file_names:
-            stn = f.read_file("../sample_stns/" + file_name)
+            stn = f.read_file(FILE_PATH + file_name)
             dispatchable_stn = luke_dispatch(stn)
             try:
                 greedy_execute(dispatchable_stn)
                 counter += 1
             except:
-                pass
+                print(file_name)
 
         print(f"{counter}/{len(file_names)} tests passed!")
 
     def test_luke_dispatch_return(time):
         return f"Testing Luke Dispatch took {time} seconds"
 
-    dispatch_file_names = [f for f in os.listdir("../sample_stns/")]
+    dispatch_file_names = [f for f in os.listdir(FILE_PATH)]
 
     if test_fast:
         time_test(test_fast_dispatch,

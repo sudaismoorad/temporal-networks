@@ -3,7 +3,7 @@ STN
 # Num Time-Points
 9
 # Num Ordinary Edges
-15
+14
 # Time-Point Names
 A B C D E F G H I
 # Ordinary Edges
@@ -13,7 +13,6 @@ C -1 A
 D 12 E
 E -10 F
 F -2 D
-B 4 E
 B 29 E
 D 12 B
 D 3 G

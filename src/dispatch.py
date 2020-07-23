@@ -218,26 +218,26 @@ class Dispatch:
         # making predecessor graph for running tarjan on it
         predecessor_graph = make_pred_graph(
             network, distances)
-
+        # print("predecessor_graph: ", predecessor_graph)
         # tarjan returns sorted rigid components
         rigid_components = tarjan(
             predecessor_graph, potential_function)
-
+        # print("rigid_components: ", rigid_components)
         # making a list of leaders
         list_of_leaders = []
         for i in range(len(rigid_components)):
             list_of_leaders.append(rigid_components[i][0])
-
+        # print("list_of_leaders: ", list_of_leaders)
         # creating the doubly linked chain
         doubly_linked_chain = get_doubly_linked_chain(
             rigid_components, network)
-
+        # print("doubly_linked_chain: ", doubly_linked_chain)
         # Creating the contracted graph with the only time-points being the leader
         # For every edge going from an RC to another RC, an equivalent edge is
         # inserted from one leader to another
         CONTR_G = connect_leaders(
             network, list_of_leaders, rigid_components, potential_function)
-
+        # print("yay: ", CONTR_G)
         # For every leader A
         for A in list_of_leaders:
             # Get the index of A in the contracted graph
@@ -255,7 +255,7 @@ class Dispatch:
 
             delete_edges = mark_dominating_edges(
                 CONTR_G, A, distances)
-            
+            # print(A, delete_edges)
             # Delete the marked dominating edges
             for i in range(CONTR_G.num_tps()):
                 if i == A:

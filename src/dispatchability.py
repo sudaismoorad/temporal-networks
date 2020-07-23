@@ -81,23 +81,23 @@ class Dispatchability:
         Effects:
             Prints out execution sequence.
         """
-        # minimum = float("inf")
-        # for val in potential_function:
-        #     minimum = min(minimum, val)
-        # start = potential_function.index(minimum)
+        minimum = float("inf")
+        for val in potential_function:
+            minimum = min(minimum, val)
+        start = potential_function.index(minimum)
         # print(start, stn.successor_edges[start])
-        start = -1
-        for node_idx, edge_dict in enumerate(stn.successor_edges):
-            flag = True
-            if not edge_dict:
-                continue
-            for _, weight in edge_dict.items():
-                if weight < 0:
-                    flag = False
-                    continue
-            if flag:
-                start = node_idx
-                break
+        # start = -1
+        # for node_idx, edge_dict in enumerate(stn.successor_edges):
+        #     flag = True
+        #     if not edge_dict:
+        #         continue
+        #     for _, weight in edge_dict.items():
+        #         if weight < 0:
+        #             flag = False
+        #             continue
+        #     if flag:
+        #         start = node_idx
+        #         break
         if start == -1:
             return False
         # variable names lifted from Muscettola, Morris, and Tsamardinos
