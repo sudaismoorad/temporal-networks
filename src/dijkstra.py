@@ -194,35 +194,4 @@ class Dijkstra:
 
         return distances
 
-    @staticmethod
-    def _dispatch_dijkstra(network, src_idx, distances, potential_function):
-
-        def reweight_edges(node_idx):
-            weight = distances[node_idx] + \
-                potential_function[src_idx] - potential_function[node_idx]
-            return weight
-
-        min_heap = []
-        in_queue = {}
-        for i in range(network.num_tps()):
-            in_queue[i] = False
-
-        previous = [None for i in range(network.num_tps())]
-
-        heapq.heappush(min_heap, (reweight_edges(src_idx), src_idx))
-        in_queue[src_idx] = True
-        counter = 0
-
-        while min_heap:
-            _, u_idx = heapq.heappop(min_heap)
-            for successor_idx, new_weight in network.successor_edges[u_idx].items():
-                if (reweight_edges(u_idx) + new_weight < reweight_edges(successor_idx)) and in_queue[successor_idx] == False:
-                    counter += 1
-                    distances[successor_idx] = new_weight + \
-                        reweight_edges(u_idx)
-                    previous[successor_idx] = u_idx
-                    heapq.heappush(
-                        min_heap, (reweight_edges(successor_idx), successor_idx))
-                    in_queue[successor_idx] = True
-
-        return distances
+    

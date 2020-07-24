@@ -53,9 +53,9 @@ class FloydWarshall:
             # and store the results in an array
             distance_matrix[node_idx][node_idx] = 0
 
-        for i in range(num_tps):
-            for j in range(num_tps):
-                for k in range(num_tps):
+        for k in range(num_tps):
+            for i in range(num_tps):
+                for j in range(num_tps):
                     distance_matrix[i][j] = min(
                         distance_matrix[i][j], distance_matrix[i][k] + distance_matrix[k][j])
 
