@@ -5,11 +5,10 @@ from johnson import Johnson
 from dispatch import Dispatch
 from tarjan import Tarjan
 from dispatchability import Dispatchability
-from dc_checking import cairo_et_al_2018
 
 
 __all__ = ['floyd_warshall', 'bellman_ford',
-           'dijkstra', 'johnson', 'dispatch', 'tarjan', 'dc_cairo_et_al_2018']
+           'dijkstra', 'johnson', 'dispatch', 'tarjan']
 
 
 def floyd_warshall(network):
@@ -38,10 +37,6 @@ def slow_dispatch(network):
 
 def luke_dispatch(network):
     return Dispatch.luke_dispatch(network)
-
-
-def dc_cairo_et_al_2018(network):
-    return cairo_et_al_2018(network)
 
 
 def tarjan(network):

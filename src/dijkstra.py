@@ -16,7 +16,7 @@ class Dijkstra:
     # How to deal with predecessor edges attribute? Does pred_dijkstra run when predecessor edges given or it always calculates them?
 
     @staticmethod
-    def dijkstra_wrapper(network, src, succ_direction=True, potential_function=False, path=False, dispatch=False):
+    def dijkstra_wrapper(network, src, succ_direction=True, potential_function=False):
         """
         A static method that calls one of the variants of Dikstra's algorithm
         depending on the inputs given.
@@ -46,11 +46,6 @@ class Dijkstra:
 
         distances = [float("inf") for i in range(network.num_tps())]
         distances[src_idx] = 0
-
-        if dispatch:
-            if network.successor_edges is None or potential_function is None:
-                return False
-            return Dijkstra._dispatch_dijkstra(network, src_idx, distances, potential_function)
 
         if not potential_function:
             if succ_direction:
@@ -193,5 +188,3 @@ class Dijkstra:
                         min_heap, (distances[successor_idx], successor_idx))
 
         return distances
-
-    

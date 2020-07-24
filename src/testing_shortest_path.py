@@ -1,4 +1,4 @@
-from algorithms import bellman_ford, dijkstra
+from stn_algorithms import bellman_ford, dijkstra
 import os
 import sys
 from test_helper import time_test
@@ -13,7 +13,8 @@ def test_shortest_path_algorithms(file_names):
     def test_bellman_ford_existing_src(file_names):
         for file_name in file_names:
             stn = f.read_file(FILE_PATH + file_name)
-            bellman_ford_dict[file_name] = [False for _ in range(stn.num_tps())]
+            bellman_ford_dict[file_name] = [
+                False for _ in range(stn.num_tps())]
             for i in range(stn.num_tps()):
                 bellman_ford_d = bellman_ford(stn, i)
                 bellman_ford_dict[file_name][i] = bellman_ford_d
@@ -28,20 +29,19 @@ def test_shortest_path_algorithms(file_names):
             for i in range(stn.num_tps()):
                 dijkstra_d = dijkstra(stn, i)
                 dijkstra_dict[file_name][i] = dijkstra_d
-            
-    
+
     def test_dijkstra_return(time):
         return f"Testing Dijkstra (forward propagation) took {time} seconds"
-    
+
     def test_pred_dijkstra(file_names):
         for file_name in file_names:
             stn = f.read_file(FILE_PATH + file_name)
-            pred_dijkstra_dict[file_name] = [False for _ in range(stn.num_tps())]
+            pred_dijkstra_dict[file_name] = [
+                False for _ in range(stn.num_tps())]
             for i in range(stn.num_tps()):
                 dijkstra_d = dijkstra(stn, i, succ_direction=False)
                 pred_dijkstra_dict[file_name][i] = dijkstra_d
-            
-    
+
     def test_pred_dijkstra_return(time):
         return f"Testing Dijkstra (backward propagation) took {time} seconds"
 
@@ -66,16 +66,16 @@ def test_shortest_path_algorithms(file_names):
         file_names = [f for f in os.listdir(FILE_PATH)]
 
     time_test(test_bellman_ford_existing_src,
-                  file_names, test_bellman_ford_existing_src_return)
-    
+              file_names, test_bellman_ford_existing_src_return)
+
     time_test(test_dijkstra,
-                  file_names, test_dijkstra_return)
-  
+              file_names, test_dijkstra_return)
+
     time_test(test_pred_dijkstra,
-                  file_names, test_pred_dijkstra_return)
+              file_names, test_pred_dijkstra_return)
 
     time_test(test_compare_d,
-                  file_names, test_compare_d_return)
+              file_names, test_compare_d_return)
 
 
 if __name__ == "__main__":
@@ -85,5 +85,3 @@ if __name__ == "__main__":
         file_names = args[1:]
 
     test_shortest_path_algorithms(file_names)
-
-    

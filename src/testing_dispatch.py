@@ -1,4 +1,4 @@
-from algorithms import dispatch, slow_dispatch, luke_dispatch, greedy_execute, johnson
+from stn_algorithms import dispatch, slow_dispatch, luke_dispatch, greedy_execute, johnson
 import os
 import sys
 from test_helper import time_test

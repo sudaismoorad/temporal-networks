@@ -150,51 +150,49 @@ def creating_dispatchable_stn(APSP, contracted_graph, doubly_linked_chain):
     return DISPATCHABLE_STN
 
 
-def mark_dominating_edges(contracted_graph, leader, distances):
+def marker(stn, src, dist):
 
-    delete_edges = set()
-    predecessor_graph = make_pred_graph(contracted_graph, distances)
-    # print(predecessor_graph)
+    n = stn.num_tps()
+    mark = [False for _ in range(n)]
+    visited = [False for _ in range(n)]
+    pred_graph = make_pred_graph(stn, dist)
+    # print(f"PredGraph: {pred_graph}\n")
+    LOOKING_FOR_NEG = 0
+    FOUND_NEG = 1
+    queue = deque()
+    for succ in pred_graph.successor_edges[src]:
+        queue.append((succ, LOOKING_FOR_NEG, float("inf")))
 
-    LOOKING_FOR_NEGATIVE = 0
-    FOUND_NEGATIVE = 1
-    num_tps = predecessor_graph.num_tps()
-    visited = [False for _ in range(num_tps)]
-
-    for successor_idx in predecessor_graph.successor_edges[leader]:
-        phase = LOOKING_FOR_NEGATIVE
-        min_dist = float("inf")
-        cur_dist = predecessor_graph.successor_edges[leader][successor_idx]
-        if cur_dist < 0:
-            phase = FOUND_NEGATIVE
-        stack = deque()
-        for node_idx in predecessor_graph.successor_edges[successor_idx]:
-            min_dist = min(min_dist, predecessor_graph.successor_edges[leader][successor_idx])
-            stack.append((node_idx, successor_idx, phase, min_dist, cur_dist))
-        prev_node_idx = successor_idx
-        while stack:
-            node_idx, prev_node_idx, phase, min_dist, cur_dist = stack.pop()
-            cur_dist += predecessor_graph.successor_edges[prev_node_idx][node_idx]
-            # print(leader, cur_dist, min_dist, phase, node_idx)
-            if phase == FOUND_NEGATIVE and cur_dist < 0:
-                # print("beep1")
-                delete_edges.add(node_idx)
-            elif min_dist <= cur_dist and cur_dist >= 0:
-                # print("beep2")
-                delete_edges.add(node_idx)
-            elif phase == LOOKING_FOR_NEGATIVE and cur_dist < 0:
-                phase = FOUND_NEGATIVE
-            # print("check")
-            min_dist = min(
-                min_dist, predecessor_graph.successor_edges[prev_node_idx][node_idx])
-            if visited[node_idx]:
-                break
-            visited[node_idx] = True
-            for node_successor_idx in predecessor_graph.successor_edges[node_idx]:
-                stack.append((node_successor_idx, node_idx,
-                              phase, min_dist, cur_dist))
-
-    return delete_edges
+    while queue:
+        x, phase, min_so_far = queue.pop()
+        # print("Popped: ", x, ", phase: ", phase, ", min: ", min_so_far)
+        # case 1:  phase switch
+        if phase == LOOKING_FOR_NEG and dist[x] < 0:
+            phase = FOUND_NEG
+            # print("Changed phase to found_neg!")
+        # case 2:  lower dominated
+        elif phase == FOUND_NEG and dist[x] < 0:
+            mark[x] = True
+            # print("Marked X (lower)!")
+        # case 3:  upper dominated
+        elif min_so_far <= dist[x] and dist[x] >= 0:
+            mark[x] = True
+            # print("Marked X (upper)!")
+        # all other cases do nothing, so ignore
+        # Prepare for next iteration
+        if visited[x] == False:
+            # print("Changing visited X to False!")
+            visited[x] = True
+            for y in pred_graph.successor_edges[x]:
+                queue.append((y, phase, min(dist[x], min_so_far)))
+    # after the while loop
+    # for x in range(n):
+    #     if mark[x] == True:
+    #         print(f"{x} is marked!\n")
+    #     else:
+    #         pass
+    #         print(f"{x} is unmarked...\n")
+    return mark
 
 
 class Dispatch:
@@ -222,7 +220,6 @@ class Dispatch:
         # tarjan returns sorted rigid components
         rigid_components = tarjan(
             predecessor_graph, potential_function)
-        # print("rigid_components: ", rigid_components)
         # making a list of leaders
         list_of_leaders = []
         for i in range(len(rigid_components)):
@@ -247,23 +244,21 @@ class Dispatch:
             # Run dijkstra to get the list of distances from the leader A
             distances = Dijkstra.dijkstra_wrapper(
                 CONTR_G, A)
-           
 
             for idx, val in CONTR_G.successor_edges[A].items():
                 weight = min(distances[idx], val)
                 CONTR_G.successor_edges[A][idx] = weight
 
-            delete_edges = mark_dominating_edges(
+            mark = marker(
                 CONTR_G, A, distances)
             # print(A, delete_edges)
             # Delete the marked dominating edges
             for i in range(CONTR_G.num_tps()):
-                if i == A:
+                if i == A or distances[i] == float("inf"):
                     continue
-                # need more information here
-                if i not in delete_edges:
-                    if distances[i] != float("inf"):
-                        CONTR_G.insert_new_edge(A, i, distances[i])
+                    # need more information here
+                if mark[i] == False:
+                    CONTR_G.insert_new_edge(A, i, distances[i])
                 elif i in CONTR_G.successor_edges[A]:
                     CONTR_G.delete_edge(A, i)
 

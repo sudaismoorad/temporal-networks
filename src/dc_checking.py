@@ -7,9 +7,11 @@ from copy import deepcopy
 
 __all__ = ["morris_2014", "cairo_et_al_2018"]
 
+
 def convert_to_normal_form(network):
     pass
-    
+
+
 def morris_2014(graph):
     network = deepcopy(graph)
     N = network.num_tps()

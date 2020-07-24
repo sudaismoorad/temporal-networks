@@ -1,6 +1,5 @@
 from stn import STN
 from stnu import STNU
-from algorithms import *
 from random_stn import RandomSTN
 from dispatch import Dispatch
 from write_stn import write_stn
