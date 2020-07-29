@@ -198,6 +198,45 @@ def marker(stn, src, dist):
 class Dispatch:
 
     @staticmethod
+    def test_on_contracted(network):
+        potential_function = BellmanFord.bellman_ford_wrapper(network)
+
+        if potential_function == False:
+            return False
+
+        # grabbing the source index
+        # this does not need to be a matrix
+        src_idx = potential_function.index(min(potential_function))
+
+        distances = Dijkstra.dijkstra_wrapper(
+            network, src_idx)
+
+        # making predecessor graph for running tarjan on it
+        predecessor_graph = make_pred_graph(
+            network, distances)
+        # print("predecessor_graph: ", predecessor_graph)
+        # tarjan returns sorted rigid components
+        rigid_components = tarjan(
+            predecessor_graph, potential_function)
+        # making a list of leaders
+        list_of_leaders = []
+        for i in range(len(rigid_components)):
+            list_of_leaders.append(rigid_components[i][0])
+        # Creating the contracted graph with the only time-points being the leader
+        # For every edge going from an RC to another RC, an equivalent edge is
+        # inserted from one leader to another
+        CONTR_G = connect_leaders(
+            network, list_of_leaders, rigid_components, potential_function)
+
+        stn1 = deepcopy(CONTR_G)
+        stn2 = deepcopy(CONTR_G)
+
+        fast = Dispatch.fast_dispatch(stn1)
+        luke = Dispatch.luke_dispatch(stn2)
+
+        return fast, luke
+
+    @staticmethod
     def fast_dispatch(network):
         # O(N^2 log N) time, O(N) extra space
 
