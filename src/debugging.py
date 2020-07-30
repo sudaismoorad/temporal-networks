@@ -8,8 +8,10 @@ from dispatch import Dispatch
 import os
 
 f = FileReader()
-stn = f.read_file("../sample_stns/dc-hunsberger-0.stn")
-dispatch(stn)
+stn = f.read_file("../sample_stns/dc-200-4.stnu")
+fast_dispatch = dispatch(stn)
+print(fast_dispatch)
+print(greedy_execute(fast_dispatch))
 # FILE_PATH = "../sample_stns/"
 # file_names = ['dc-1.stn', 'dc-3.stn', 'dc-5.stn', 'dc-APSP.stn',
 #               'dc-dispatchable.stn', 'dc-hunsberger-0.stn', 'dc-hunsberger-1.stn', 'dc-hunsberger-2.stn', 'dc-original.stn']

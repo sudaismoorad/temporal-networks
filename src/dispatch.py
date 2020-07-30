@@ -9,6 +9,11 @@ from floyd_warshall import FloydWarshall
 from stn import STN
 import heapq
 
+# =============================
+#  FILE:    dispatch.py
+#  AUTHOR:  Sudais Moorad / Muhammad Furrukh Asif
+#  DATE:    June 2020
+# =============================
 
 def make_pred_graph(network, distances):
     num_tps = network.num_tps()
@@ -175,7 +180,7 @@ def marker(stn, src, dist):
             mark[x] = True
             # print("Marked X (lower)!")
         # case 3:  upper dominated
-        elif min_so_far <= dist[x] and dist[x] >= 0:
+        elif min_so_far <= dist[x] and dist[x] >= 0 and src != x:
             mark[x] = True
             # print("Marked X (upper)!")
         # all other cases do nothing, so ignore

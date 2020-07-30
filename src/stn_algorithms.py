@@ -6,6 +6,12 @@ from dispatch import Dispatch
 from tarjan import Tarjan
 from dispatchability import Dispatchability
 
+# =============================
+#  FILE:    stn_algorithms.py
+#  AUTHOR:  Sudais Moorad / Muhammad Furrukh Asif
+#  DATE:    July 2020
+# =============================
+
 
 __all__ = ['floyd_warshall', 'bellman_ford',
            'dijkstra', 'johnson', 'dispatch', 'tarjan']

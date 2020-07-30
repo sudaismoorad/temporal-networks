@@ -1,6 +1,11 @@
 import matplotlib.pyplot as plt
 import networkx as nx
 
+# =============================
+#  FILE:    stnu.py
+#  AUTHOR:  Sudais Moorad / Muhammad Furrukh Asif
+#  DATE:    July 2020
+# =============================
 
 class STNU:
 
@@ -29,7 +34,7 @@ class STNU:
         contingent_links: List[4-Tuple(A, x, y, C) | False]
             A list of contingent links. C is the contingent time point, A is its activation
             time point, x is the lower case edge weight and y is the upper case edge weight
-        activation_point: List[List[Boolean]]
+        activation_point: List[Dict[Boolean]]
             activation_point[i][j] returns True if i is the activation point of j;
             otherwise it returns False
         ---------------------------------------------------
@@ -78,6 +83,43 @@ class STNU:
 
         self.ou_edges[tp1_idx][tp2_idx] = int(weight)
         self.ol_edges[tp1_idx][tp2_idx] = int(weight)
+
+    def insert_contingent_link(self,tp1, tp2, x, y):
+        tp1_idx = self.names_dict[tp1] if type(tp1) == str else tp1
+        tp2_idx = self.names_dict[tp2] if type(tp2) == str else tp2
+        self.contingent_links[tp2_idx] = (tp1_idx, x, y, tp2_idx)
+        self.activation_point[tp1_idx][tp2_idx] = (x,y) 
+        self.ou_edges[tp1_idx][tp2_idx] = y
+        self.ol_edges[tp1_idx][tp2_idx] = x
+
+    def insert_tp(self, tp):
+        self.names_dict[tp] = self.n
+        self.names_list.append(tp)
+        self.n += 1
+        if self.successor_edges:
+            self.successor_edges.append({})
+        if self.predecessor_edges:
+            self.predecessor_edges.append({})
+        self.ou_edges.append({})
+        self.ol_edges.append({})
+        self.activation_point.append({})
+
+    def delete_edge(self, tp1, tp2):
+        tp1_idx = self.names_dict[tp1] if type(tp1) == str else tp1
+        tp2_idx = self.names_dict[tp2] if type(tp2) == str else tp2
+
+        if self.successor_edges and tp2_idx in self.successor_edges[tp1_idx]:
+            del self.successor_edges[tp1_idx][tp2_idx]
+        if self.predecessor_edges and tp1_idx in self.predecessor_edges[tp2_idx]:
+            del self.predecessor_edges[tp2_idx][tp1_idx]
+        if tp2_idx in self.ou_edges[tp1_idx]:
+            del self.ou_edges[tp1_idx][tp2_idx]
+        if tp1_idx in self.ol_edges[tp1_idx]:
+            del self.ol_edges[tp1_idx][tp2_idx]
+        if tp2_idx in self.activation_point[tp1_idx]:
+            del self.activation_point[tp1_idx][tp2_idx]
+            self.contingent_links[tp2_idx] = False
+
 
     def visualize(self):
         # need to add contingent links

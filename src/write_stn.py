@@ -1,3 +1,10 @@
+# =============================
+#  FILE:    write_stn.py
+#  AUTHOR:  Sudais Moorad / Muhammad Furrukh Asif
+#  DATE:    June 2020
+# =============================
+
+
 def write_stn(network, stn_name):
         """
          write_stn: Writes a randomly generated STN to a file.

@@ -1,5 +1,10 @@
 from collections import deque
 
+# =============================
+#  FILE:    tarjan.py
+#  AUTHOR:  Sudais Moorad / Muhammad Furrukh Asif
+#  DATE:    July 2020
+# =============================
 
 class Tarjan:
 
@@ -21,7 +26,7 @@ class Tarjan:
             if self.ids[i] == -1:
                 self._dfs(i)
         # self.low = [0, 0, 2, 3, 3]
-        print(self.low)
+        
         rc_map = {}
         counter = 0
         for i in self.low:
@@ -35,7 +40,7 @@ class Tarjan:
             rigid_components[i].append(idx)
 
         # rigid_components = [[0, 1], [2], [3, 4]]
-        print(rigid_components)
+        
         return rigid_components
 
     def _dfs(self, idx):

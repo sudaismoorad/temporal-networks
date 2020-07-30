@@ -1,5 +1,5 @@
 # ==============================================
-#  FILE:     bellman_ford.py
+#  FILE:     floyd_warshall.py
 #  AUTHOR:   Sudais Moorad / Muhammad Furrukh Asif
 #  DATE:     June 2020
 # ==============================================

@@ -4,12 +4,40 @@ from random import randint
 from heapq import heappush, heappop, heapify
 from copy import deepcopy
 
+# =============================
+#  FILE:    dc_checking.py
+#  AUTHOR:  Sudais Moorad / Muhammad Furrukh Asif
+#  DATE:    July 2020
+# =============================
+
 
 __all__ = ["morris_2014", "cairo_et_al_2018"]
 
 
 def convert_to_normal_form(network):
-    pass
+    activation_points = deepcopy(network.activation_point)
+    marked_stuff = []
+    for activation_node, activation_dict in enumerate(activation_points):
+        if len(activation_dict) > 1:
+            counter = 0
+            name = network.names_list[activation_node]
+            for contingent_node, (x, y) in activation_dict.items():
+                if counter == 0:
+                    counter += 1 
+                    continue
+                new_node_name = name + "".join([chr(randint(97,123)) for _ in range(9)])
+                network.insert_tp(new_node_name)
+                new_node_idx = network.names_dict[new_node_name]
+                network.delete_edge(activation_node, contingent_node)
+                network.insert_ordinary_edge(new_node_idx, activation_node, 0)
+                network.insert_ordinary_edge(activation_node, new_node_idx, 0)
+                network.insert_contingent_link(new_node_idx, contingent_node, x, y)
+
+                
+                
+
+                
+
 
 
 def morris_2014(graph):
@@ -17,13 +45,17 @@ def morris_2014(graph):
     N = network.num_tps()
 
     def is_negative(node):
+        #check all edges
         for _, w in network.predecessor_edges[node]:
             if w < 0:
                 return True
         return False
 
-    def is_unsuitable(node):
-        pass
+    def is_unsuitable(v, u):
+        for n1, _, _, n2 in network.contingent_links:
+            if (n1 == v and n2 == u) or (n1 == u and n2 == v):
+                return True
+        return False
 
     def DC_backprop(src):
         if ancestor[src] == src:
@@ -38,6 +70,7 @@ def morris_2014(graph):
                 distances[i] = float("inf")
 
         min_heap = []
+        #all edges
         for n1, e1 in network.predecessor_edges[src]:
             distances[n1] = e1
             heappush(min_heap, (e1, n1))
@@ -52,14 +85,14 @@ def morris_2014(graph):
             if negative_nodes[u]:
                 # change global states here
                 ancestor[u] = src
-                # what do they mean by prior here?
                 if DC_backprop(u) == False:
                     return False
-            for v, e in network.predecessor_edges[src]:
+            #all edges
+            for v, e in network.predecessor_edges[u]:
                 if e < 0:
                     continue
                 # what does it mean for e to be unsuitable
-                if is_unsuitable(v):
+                if is_unsuitable(v, u):
                     continue
                 new = distances[u] + e
                 if new < distances[v]:
@@ -68,12 +101,14 @@ def morris_2014(graph):
         prior[src] = True
         return True
 
-    prior = [False for i in range(N)]
-    for idx, state in negative_nodes:
+
+    negative_nodes = [is_negative(node) for node in range(N)]
+    for idx, state in enumerate(negative_nodes):
         if state:
+            #global or local??
+            prior = [False for i in range(N)]
             distances = [float("inf") for i in range(N)]
             ancestor = [float("inf") for i in range(N)]
-            negative_nodes = [is_negative(node) for node in range(N)]
             if DC_backprop(idx) == False:
                 return False
     return True

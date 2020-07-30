@@ -4,6 +4,13 @@ import sys
 from test_helper import time_test
 from file_reader import FileReader
 
+# =============================
+#  FILE:    testing_dispatch.py
+#  AUTHOR:  Sudais Moorad / Muhammad Furrukh Asif
+#  DATE:    July 2020
+# =============================
+
+
 
 def test_dispatch(test_fast, test_slow, test_luke):
     f = FileReader()

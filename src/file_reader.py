@@ -6,6 +6,11 @@ from write_stn import write_stn
 from time import time
 from dispatchability import Dispatchability
 
+# =============================
+#  FILE:    file_reader.py
+#  AUTHOR:  Sudais Moorad / Muhammad Furrukh Asif
+#  DATE:    June/July 2020
+# =============================
 
 class FileReader:
 
@@ -171,6 +176,8 @@ class FileReader:
                     network.ol_edges = [
                         {} for i in range(num_points)]
                     network.names_list = ["0" for i in range(num_points)]
+                    network.activation_point = [
+                        {} for i in range(num_points)]
                 elif state == 'NO_EDGES':
                     num_edges = int(line)
                 elif state == 'NO_LINKS':
@@ -205,7 +212,7 @@ class FileReader:
                     contingent_time_point = network.names_dict[weights[3]]
                     network.contingent_links[contingent_time_point] = (
                         activation_time_point, duration[0], duration[1], contingent_time_point)
-                    network.activation_point[activation_time_point][contingent_time_point] = True
+                    network.activation_point[activation_time_point][contingent_time_point] = (duration[0], duration[1])
                     network.ol_edges[activation_time_point][contingent_time_point] = duration[0]
                     network.ou_edges[activation_time_point][contingent_time_point] = - duration[1]
         return network

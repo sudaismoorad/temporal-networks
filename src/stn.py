@@ -145,9 +145,9 @@ class STN:
         tp1_idx = self.names_dict[tp1] if type(tp1) == str else tp1
         tp2_idx = self.names_dict[tp2] if type(tp2) == str else tp2
 
-        if self.successor_edges:
+        if self.successor_edges and tp2_idx in self.successor_edges[tp1_idx]:
             del self.successor_edges[tp1_idx][tp2_idx]
-        if self.predecessor_edges:
+        if self.predecessor_edges and tp1_idx in self.successor_edges[tp2_idx]:
             del self.predecessor_edges[tp2_idx][tp1_idx]
 
         self.dist_up_to_date = False
@@ -171,6 +171,12 @@ class STN:
         self.names_dict[tp] = self.n
         self.names_list.append(tp)
         self.n += 1
+        if self.successor_edges:
+            self.successor_edges.append({})
+        if self.predecessor_edges:
+            self.predecessor_edges.append({})
+        self.distance_matrix = []
+        self.dist_up_to_date = False
 
     # Discuss whether to keep this or no
     # should we make a generator for traversing through the stn

@@ -1,6 +1,11 @@
 from bellman_ford import BellmanFord
 from dijkstra import Dijkstra
 
+# =============================
+#  FILE:    johnson.py
+#  AUTHOR:  Sudais Moorad / Muhammad Furrukh Asif
+#  DATE:    June 2020
+# =============================
 
 class Johnson:
 

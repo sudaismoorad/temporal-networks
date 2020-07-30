@@ -1,6 +1,12 @@
 from stn import STN
 from random import random, randrange
 
+# =============================
+#  FILE:    random_stn.py
+#  AUTHOR:  Sudais Moorad / Muhammad Furrukh Asif
+#  DATE:    June 2020
+# =============================
+
 
 class RandomSTN:
 

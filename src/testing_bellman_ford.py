@@ -2,6 +2,13 @@ from file_reader import FileReader
 from stn_algorithms import floyd_warshall
 import sys
 
+# =============================
+#  FILE:    testing_bellman_ford.py
+#  AUTHOR:  Sudais Moorad / Muhammad Furrukh Asif
+#  DATE:    July 2020
+# =============================
+
+
 
 def testing_bellman_ford(file_name):
     f = FileReader()
@@ -13,4 +20,4 @@ if __name__ == "__main__":
     args = sys.argv
     print(testing_bellman_ford(args[1]))
 
-# for file in ./../sample_stns/random_stns/*.stn; do python3 testing_bellman_ford.py $file; done
+

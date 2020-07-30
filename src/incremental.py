@@ -1,6 +1,11 @@
 import heapq
 from copy import deepcopy
 
+# =============================
+#  FILE:    incremental.py
+#  AUTHOR:  Sudais Moorad / Muhammad Furrukh Asif
+#  DATE:    June 2020
+# =============================
 
 class Incremental:
 
