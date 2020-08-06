@@ -14,7 +14,7 @@ from file_reader import FileReader
 
 def test_dispatch(test_fast, test_slow, test_luke):
     f = FileReader()
-    FILE_PATH = "../sample_stns/"
+    FILE_PATH = "../random_stns/"
 
     def test_fast_dispatch(file_names):
         counter = 0

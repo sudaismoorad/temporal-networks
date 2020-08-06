@@ -16,7 +16,7 @@ def write_stn(network, stn_name):
          SIDE EFFECTS:  Writes a randomly generated STN to a file.
          --------------------------------------------------------------
          """
-        file = open("../sample_stns/" + str(stn_name) + '.stn', "w")
+        file = open("../sample_stns/" + stn_name + '.stn', "w")
         edge_string = ""
         edge_counter = 0
         names_string = ""

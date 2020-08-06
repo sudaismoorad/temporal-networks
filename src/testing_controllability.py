@@ -13,6 +13,7 @@ from test_helper import time_test
 
 
 
+sys.setrecursionlimit(10**6)
 def test_morris_2014(test_controllable, test_uncontrollable):
     f = FileReader()
 
@@ -20,6 +21,7 @@ def test_morris_2014(test_controllable, test_uncontrollable):
 
         counter = 0
         for file_name in controllable_file_names:
+            print(file_name)
             stnu = f.read_file("../sample_stnus/controllable/" + file_name)
             dc = dc_check_morris(stnu)
             if dc != True:
@@ -123,4 +125,4 @@ if __name__ == "__main__":
             raise Exception(
                 "System argument expected to be either 'controllable' or 'uncontrollable'")
 
-    test_cormen_et_al_2018(controllable, uncontrollable)
+    test_morris_2014(controllable, uncontrollable)

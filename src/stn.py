@@ -171,10 +171,10 @@ class STN:
         self.names_dict[tp] = self.n
         self.names_list.append(tp)
         self.n += 1
-        if self.successor_edges:
-            self.successor_edges.append({})
-        if self.predecessor_edges:
-            self.predecessor_edges.append({})
+        # if self.successor_edges:
+        #     self.successor_edges.append({})
+        # if self.predecessor_edges:
+        #     self.predecessor_edges.append({})
         self.distance_matrix = []
         self.dist_up_to_date = False
 

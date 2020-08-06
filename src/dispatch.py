@@ -59,6 +59,7 @@ def sort_rigid_components(rigid_components, potential_function):
         rigid_components.append([])
         for j in range(len(temp_rigid_components[i])):
             rigid_components[i].append(temp_rigid_components[i][j][1])
+    # print(rigid_components)
     return rigid_components
 
 
@@ -77,6 +78,7 @@ def get_doubly_linked_chain(rigid_components, APSP):
                 weight = bf[n2]
 
             doubly_linked_chain.append((n1, n2, weight))
+    
     return doubly_linked_chain
 
 
@@ -120,13 +122,13 @@ def connect_leaders(network, list_of_leaders, rigid_components, potential_functi
     for node_idx in contracted_graph.successor_edges:
         for successor_idx in contracted_graph.successor_edges:
             pass
-
+    
     return contracted_graph
 
 
-def creating_dispatchable_stn(APSP, contracted_graph, doubly_linked_chain):
+def creating_dispatchable_stn(network, contracted_graph, doubly_linked_chain):
     DISPATCHABLE_STN = STN()
-    for name in APSP.names_list:
+    for name in network.names_list:
         DISPATCHABLE_STN.successor_edges.append({})
         DISPATCHABLE_STN.insert_new_tp(name)
 
@@ -137,8 +139,8 @@ def creating_dispatchable_stn(APSP, contracted_graph, doubly_linked_chain):
             node_name = contracted_graph.names_list[node_idx]
             successor_name = contracted_graph.names_list[successor_idx]
 
-            idx_1 = APSP.names_dict[node_name]
-            idx_2 = APSP.names_dict[successor_name]
+            idx_1 = network.names_dict[node_name]
+            idx_2 = network.names_dict[successor_name]
 
             if idx_1 == idx_2:
                 continue
@@ -215,7 +217,7 @@ class Dispatch:
 
         distances = Dijkstra.dijkstra_wrapper(
             network, src_idx)
-
+       
         # making predecessor graph for running tarjan on it
         predecessor_graph = make_pred_graph(
             network, distances)
@@ -223,6 +225,7 @@ class Dispatch:
         # tarjan returns sorted rigid components
         rigid_components = tarjan(
             predecessor_graph, potential_function)
+       
         # making a list of leaders
         list_of_leaders = []
         for i in range(len(rigid_components)):
@@ -253,17 +256,20 @@ class Dispatch:
         # grabbing the source index
         # this does not need to be a matrix
         src_idx = potential_function.index(min(potential_function))
-
+        # print("pf: ", potential_function)
+        # print(src_idx)
         distances = Dijkstra.dijkstra_wrapper(
             network, src_idx)
-
+        # print("d: ", distances)
         # making predecessor graph for running tarjan on it
         predecessor_graph = make_pred_graph(
             network, distances)
+        # print("pg: ", predecessor_graph)
         # print("predecessor_graph: ", predecessor_graph)
         # tarjan returns sorted rigid components
         rigid_components = tarjan(
             predecessor_graph, potential_function)
+        # print("rigid: ", rigid_components)
         # making a list of leaders
         list_of_leaders = []
         for i in range(len(rigid_components)):

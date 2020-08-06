@@ -14,24 +14,49 @@ from copy import deepcopy
 __all__ = ["morris_2014", "cairo_et_al_2018"]
 
 
+def predecessor_oul_edges(network):
+    # oul_edges = [{} for i in range(network.num_tps())]
+    for node_idx, edge_dict in enumerate(network.ou_edges):
+        for successor_idx, weight in edge_dict.items():
+            if successor_idx not in network.successor_edges[node_idx]:
+                # oul_edges[successor_idx][node_idx] = -weight
+                yield (node_idx, successor_idx, -weight)
+
+    for node_idx, edge_dict in enumerate(network.ol_edges):
+        for successor_idx, weight in edge_dict.items():
+            # oul_edges[node_idx][successor_idx] = weight
+            yield (successor_idx, node_idx, weight)
+
+def predecessor_ol_edges(network):
+    for node_idx, edge_dict in enumerate(network.ol_edges):
+        for successor_idx, weight in edge_dict.items():
+            yield (successor_idx, node_idx, weight)
+
+
+
+
+
+    
+
+
 def convert_to_normal_form(network):
-    activation_points = deepcopy(network.activation_point)
+    contingent_links = deepcopy(network.contingent_links)
     marked_stuff = []
-    for activation_node, activation_dict in enumerate(activation_points):
-        if len(activation_dict) > 1:
-            counter = 0
-            name = network.names_list[activation_node]
-            for contingent_node, (x, y) in activation_dict.items():
-                if counter == 0:
-                    counter += 1 
-                    continue
-                new_node_name = name + "".join([chr(randint(97,123)) for _ in range(9)])
-                network.insert_tp(new_node_name)
-                new_node_idx = network.names_dict[new_node_name]
-                network.delete_edge(activation_node, contingent_node)
-                network.insert_ordinary_edge(new_node_idx, activation_node, 0)
-                network.insert_ordinary_edge(activation_node, new_node_idx, 0)
-                network.insert_contingent_link(new_node_idx, contingent_node, x, y)
+    for contingent_link in contingent_links:
+        if not contingent_link:
+            continue
+        A, x, y, C = contingent_link
+        name = network.names_list[A]
+        new_node_name = name + "".join([chr(randint(97,123)) for _ in range(9)])
+        network.insert_tp(new_node_name)
+        new_node_idx = network.names_dict[new_node_name]
+        network.delete_edge(A, C)
+        network.insert_ordinary_edge(A, new_node_idx, x)
+        network.insert_ordinary_edge(new_node_idx, A, -x)
+        network.insert_contingent_link(new_node_idx, 0, y-x, C)
+
+
+        
 
                 
                 
@@ -41,21 +66,24 @@ def convert_to_normal_form(network):
 
 
 def morris_2014(graph):
+    convert_to_normal_form(graph)
     network = deepcopy(graph)
     N = network.num_tps()
 
     def is_negative(node):
         #check all edges
-        for _, w in network.predecessor_edges[node]:
+        for n1, _, w in predecessor_oul_edges(network):
+            if n1 != node:
+                continue
             if w < 0:
                 return True
         return False
 
-    def is_unsuitable(v, u):
-        for n1, _, _, n2 in network.contingent_links:
-            if (n1 == v and n2 == u) or (n1 == u and n2 == v):
-                return True
-        return False
+    def is_unsuitable(u, v):
+        return network.activation_point[v][u] if u in network.activation_point[v] else False
+
+
+        
 
     def DC_backprop(src):
         if ancestor[src] == src:
@@ -65,13 +93,15 @@ def morris_2014(graph):
             return True
 
         distances[src] = 0
-        for i in range(len(N)):
+        for i in range(N):
             if i != src:
                 distances[i] = float("inf")
 
         min_heap = []
         #all edges
-        for n1, e1 in network.predecessor_edges[src]:
+        for n2, n1, e1 in predecessor_oul_edges(network):
+            if src != n2:
+                continue
             distances[n1] = e1
             heappush(min_heap, (e1, n1))
 
@@ -79,6 +109,8 @@ def morris_2014(graph):
             _, u = heappop(min_heap)
             # might not need distances... first ele is distance
             if distances[u] >= 0:
+                if distances[u] == float("inf"):
+                    continue
                 network.insert_ordinary_edge(u, src, distances[u])
                 continue
             # cache the negative nodes
@@ -88,11 +120,13 @@ def morris_2014(graph):
                 if DC_backprop(u) == False:
                     return False
             #all edges
-            for v, e in network.predecessor_edges[u]:
+            for t, v, e in predecessor_ol_edges(network):
+                if t != u:
+                    continue
                 if e < 0:
                     continue
                 # what does it mean for e to be unsuitable
-                if is_unsuitable(v, u):
+                if is_unsuitable(u, v):
                     continue
                 new = distances[u] + e
                 if new < distances[v]:
@@ -188,7 +222,6 @@ def apply_relax_lower(network, W, C):
 
     edges = set()
     _, x, y, _ = network.contingent_links[C]
-
     if delta_W_C >= (y - x):
         pass
     elif network.contingent_links[W] != False:
@@ -227,7 +260,6 @@ def close_relax_lower(network, potential_function, C):
     min_heap = []
     NOT_YET_IN_QUEUE, IN_QUEUE, POPPED_OFF = 0, 1, 2
     in_queue = [NOT_YET_IN_QUEUE for i in range(len(potential_function))]
-
     for W, edge_dict in enumerate(network.ol_edges):
         for C_prime, delta_W_C in edge_dict.items():
             if C_prime == C:

@@ -120,7 +120,7 @@ class Dispatchability:
             A_max = min([bounds[u][1] for u in A])
             assert A_min <= A_max, "The minimum time is more than the maximum time. This STN is not dispatchable."
             if time<A_min:
-                time = random.randint(A_min, A_max)
+                time = A_min
             assert time<=A_max, "The time exceeds the maximum value in the enabled points. This STN is not dispatchable."
             time_point = Dispatchability._find_point_in_time_window(A, bounds, time)
             S.append(time_point)
